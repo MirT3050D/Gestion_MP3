@@ -161,7 +161,7 @@
         }
 
         function togglePlay() {
-            if (audio.src) {
+            if (audio.src && audio.src !== window.location.href) {
                 if (audio.paused) {
                     audio.play();
                     playBtnIcon.classList.remove('ph-play');
@@ -170,6 +170,12 @@
                     audio.pause();
                     playBtnIcon.classList.remove('ph-pause');
                     playBtnIcon.classList.add('ph-play');
+                }
+            } else {
+                // Si aucune musique n'est chargée, on lance la première de la liste
+                const firstPlayBtn = document.querySelector('.action-btn[title="Lire"]');
+                if (firstPlayBtn) {
+                    firstPlayBtn.click();
                 }
             }
         }
@@ -193,6 +199,17 @@
             playBtnIcon.classList.remove('ph-pause');
             playBtnIcon.classList.add('ph-play');
             progressFill.style.width = '0%';
+        });
+        
+        // Navigation dans la barre de progression
+        const progressBar = document.getElementById('progress-bar');
+        progressBar.addEventListener('click', (e) => {
+            if (audio.duration) {
+                const rect = progressBar.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const percent = clickX / rect.width;
+                audio.currentTime = percent * audio.duration;
+            }
         });
     </script>
 </body>
