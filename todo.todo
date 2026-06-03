@@ -1,0 +1,55 @@
+🔑 Étape 1 : Authentification & Base (Le contenant)
+Avant de gérer la musique, il faut sécuriser l'accès car tes playlists sont uniques par utilisateur.
+
+[ ] Page de Connexion / Inscription : Formulaires simples (Nom d'utilisateur, mot de passe).
+
+[ ] Navbar globale (Barre de navigation) : * Logo de l'application.
+
+Liens vers : "Ma Bibliothèque", "Générer une Playlist", "Mes Playlists Sauvegardées".
+
+Bouton "Déconnexion" avec affichage du nom de l'utilisateur connecté.
+
+[ ] Système de gestion des sessions : S'assurer que si l'utilisateur n'est pas connecté, il est redirigé vers la page de login.
+
+🧠 Étape 3 : Le Générateur de Playlist (Le cœur de l'app)
+C'est la page interactive où l'utilisateur va paramétrer sa demande pour l'algorithme des 35 minutes.
+
+[ ] Formulaire de critères :
+
+[ ] Un champ de sélection pour le Genre (Pop, Rock, etc.).
+
+[ ] Un champ pour l'Artiste (optionnel).
+
+[ ] Un champ pour la Langue (si présente dans tes tags).
+
+[ ] Un champ numérique pour la Durée totale cible (par défaut pré-rempli à 35 minutes, mais modifiable).
+
+[ ] Bouton d'action "Générer la Playlist" : Déclenche l'appel vers ton algorithme Django.
+
+[ ] Indicateur de chargement (Spinner) : Super important pendant que l'algorithme calcule la combinaison exacte en arrière-plan.
+
+🎛️ Étape 4 : Visualisation et Édition de la Playlist Générée
+Une fois que Django renvoie la combinaison parfaite, il faut l'afficher et permettre à l'utilisateur de la peaufiner.
+
+[ ] Affichage du résultat : Une liste ordonnée des chansons sélectionnées.
+
+[ ] Barre de progression / Compteur : Un indicateur visuel qui montre le total actuel (ex: Total : 35mn 00s / 35mn 00s).
+
+[ ] Fonctionnalité d'Édition (Flexibilité) :
+
+[ ] Un bouton "Remplacer" à côté de chaque chanson. Si on clique dessus, cela ouvre une liste de chansons alternatives ayant exactement la même durée pour ne pas casser le total des 35 minutes.
+
+[ ] Actions de finalisation :
+
+[ ] Un champ pour donner un nom à la playlist (ex: "Ma Playlist Sport du Samedi").
+
+[ ] Un bouton "Sauvegarder la playlist".
+
+💾 Étape 5 : Gestion des Playlists Sauvegardées & Export
+L'endroit où l'on retrouve ses créations.
+
+[ ] Page "Mes Playlists" : Liste de toutes les playlists enregistrées par l'utilisateur.
+
+[ ] Lecteur Audio Intégré : Un petit lecteur HTML5 pour pouvoir écouter les morceaux de la playlist directement depuis le site.
+
+[ ] Bouton "Télécharger (.zip)" : Déclenche le téléchargement du fichier compressé contenant tous les MP3 de la playlist, préparé par ton backend Django.

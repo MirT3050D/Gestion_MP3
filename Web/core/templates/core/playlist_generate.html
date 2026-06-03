@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1><i class="ph ph-magic-wand" style="color: var(--accent);"></i> Générateur de Playlist</h1>
+</div>
+
+<div class="form-wrapper">
+    <p style="color: var(--text-secondary); margin-bottom: 2rem;">Laissez notre algorithme construire la playlist parfaite pour vous, selon la durée exacte que vous désirez.</p>
+    
+    <form method="post" action="{% url 'playlist_generate' %}" id="generate-form">
+        {% csrf_token %}
+        <!-- Listes d'autocomplétion -->
+        <datalist id="genres-list">
+            {% for g in genres %}
+            <option value="{{ g }}">
+            {% endfor %}
+        </datalist>
+
+        <datalist id="artistes-list">
+            {% for a in artistes %}
+            <option value="{{ a }}">
+            {% endfor %}
+        </datalist>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="genre"><i class="ph ph-music-note"></i> Inclure le Genre</label>
+                <input type="text" name="genre" id="genre" list="genres-list" class="form-control" placeholder="Taper ou sélectionner...">
+            </div>
+            
+            <div class="form-group">
+                <label for="genre_exclu"><i class="ph ph-prohibit"></i> Exclure le Genre</label>
+                <input type="text" name="genre_exclu" id="genre_exclu" list="genres-list" class="form-control" placeholder="Taper ou sélectionner...">
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="artiste"><i class="ph ph-microphone-stage"></i> Inclure l'Artiste</label>
+                <input type="text" name="artiste" id="artiste" list="artistes-list" class="form-control" placeholder="Taper ou sélectionner...">
+            </div>
+
+            <div class="form-group">
+                <label for="artiste_exclu"><i class="ph ph-prohibit"></i> Exclure l'Artiste</label>
+                <input type="text" name="artiste_exclu" id="artiste_exclu" list="artistes-list" class="form-control" placeholder="Taper ou sélectionner...">
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="duree_minutes"><i class="ph ph-clock"></i> Durée exacte (Minutes)</label>
+                <input type="number" name="duree_minutes" id="duree_minutes" value="35" min="0" max="600" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="duree_secondes"><i class="ph ph-clock"></i> Durée exacte (Secondes)</label>
+                <input type="number" name="duree_secondes" id="duree_secondes" value="0" min="0" max="59" class="form-control">
+            </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: -1rem; margin-bottom: 1.5rem; text-align: center;">
+            <i>Laissez les deux champs à 0 pour inclure toutes les musiques trouvées. La combinaison finale doit correspondre à la seconde près.</i>
+        </p>
+        
+        <button type="submit" class="btn-primary w-100" id="btn-submit" style="font-size: 1.1rem; padding: 1rem;">
+            <i class="ph-bold ph-lightning"></i> Générer la Playlist
+        </button>
+        
+        <!-- Spinner caché par défaut -->
+        <div id="spinner-container" style="display: none; text-align: center; margin-top: 2rem;">
+            <i class="ph ph-spinner-gap" style="font-size: 3rem; color: var(--accent); animation: spin 1s linear infinite;"></i>
+            <p style="margin-top: 1rem; color: var(--text-secondary); font-weight: 500;">Notre algorithme calcule la meilleure combinaison...</p>
+        </div>
+    </form>
+</div>
+
+<style>
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+document.getElementById('generate-form').addEventListener('submit', function() {
+    document.getElementById('btn-submit').style.display = 'none';
+    document.getElementById('spinner-container').style.display = 'block';
+});
+</script>
+{% endblock %}

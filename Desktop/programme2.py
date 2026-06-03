@@ -2,6 +2,18 @@ import pika
 import json
 import os
 from mutagen.mp3 import MP3
+import logging
+
+LOG_FILE = r"C:\Users\rahaj\Desktop\ITU\Info\Projet_Mr_Vahatra\Gestion_MP3\Desktop\log.txt"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - Programme 2 - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
 
 # 📥 Configuration des files d'attente RabbitMQ
 QUEUE_ENTREE = 'mp3_decouverts'
@@ -36,7 +48,7 @@ def extraire_toutes_les_metadonnees(chemin_fichier):
         
     except Exception as e:
         # 📝 En cas d'erreur (fichier corrompu, etc.), on log et on retourne None
-        print(f" ❌ Erreur lors de la lecture du fichier {chemin_fichier} : {e}")
+        logging.error(f" ❌ Erreur lors de la lecture du fichier {chemin_fichier} : {e}")
         return None
 
 def callback(ch, method, properties, body):
@@ -45,7 +57,7 @@ def callback(ch, method, properties, body):
         # 1. Lecture du message JSON reçu
         message_recu = json.loads(body.decode())
         chemin = message_recu["chemin_absolu"]
-        print(f" [->] Analyse en cours : {chemin}")
+        logging.info(f" [->] Analyse en cours : {chemin}")
         
         # 2. Extraction de toutes les métadonnées
         infos = extraire_toutes_les_metadonnees(chemin)
@@ -57,10 +69,10 @@ def callback(ch, method, properties, body):
                 routing_key=QUEUE_SORTIE,
                 body=json.dumps(infos)
             )
-            print(f" [<-] Toutes les métadonnées ont été envoyées dans la file '{QUEUE_SORTIE}'")
+            logging.info(f" [<-] Toutes les métadonnées ont été envoyées dans la file '{QUEUE_SORTIE}'")
             
     except Exception as e:
-        print(f" ❌ Erreur générale lors du traitement du message : {e}")
+        logging.error(f" ❌ Erreur générale lors du traitement du message : {e}")
         
     finally:
         # 4. Accusé de réception envoyé à RabbitMQ pour libérer le message d'entrée
@@ -78,11 +90,11 @@ def main():
     # 🎧 Configuration de l'écoute active
     channel.basic_consume(queue=QUEUE_ENTREE, on_message_callback=callback)
     
-    print(f" [*] Programme 2 actif. Écoute de la file '{QUEUE_ENTREE}'... (CTRL+C pour quitter)")
+    logging.info(f" [*] Programme 2 actif. Écoute de la file '{QUEUE_ENTREE}'... (CTRL+C pour quitter)")
     channel.start_consuming()
 
 if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        print(' [%] Programme arrêté par l’utilisateur.')
+        logging.info(' [%] Programme arrêté par l’utilisateur.')

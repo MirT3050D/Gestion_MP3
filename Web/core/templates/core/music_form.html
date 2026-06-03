@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1>{{ title }}</h1>
+    <a href="{% url 'music_list' %}" class="btn-text">
+        <i class="ph ph-arrow-left"></i> Annuler
+    </a>
+</div>
+
+<div class="card p-4 form-wrapper">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="mt-4">
+            <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
