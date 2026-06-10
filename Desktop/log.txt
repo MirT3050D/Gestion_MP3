@@ -788,3 +788,23 @@
 2026-06-10 14:24:13,682 - Programme 1 -  😴 Aucun nouveau fichier MP3 détecté.
 2026-06-10 14:24:13,783 - Programme 1 -  ⏳ Attente de 5 minutes avant le prochain scan (ou scan manuel)...
 2026-06-10 14:25:22,132 - Programme 2 -  [%] Programme arrêté par l’utilisateur.
+2026-06-10 14:30:59,605 - Programme 2 - Pika version 1.4.1 connecting to ('::1', 5672, 0, 0)
+2026-06-10 14:30:59,607 - Programme 2 - Socket connected: <socket.socket fd=544, family=23, type=1, proto=6, laddr=('::1', 64674, 0, 0), raddr=('::1', 5672, 0, 0)>
+2026-06-10 14:30:59,610 - Programme 2 - Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x000002E7CDC8B8C0>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x000002E7CDC8B8C0> params=<ConnectionParameters host=localhost port=5672 virtual_host=/ ssl=False>>).
+2026-06-10 14:30:59,663 - Programme 1 -  🔍 Démarrage du scan du dossier musique...
+2026-06-10 14:30:59,670 - Programme 1 -  😴 Aucun nouveau fichier MP3 détecté.
+2026-06-10 14:30:59,676 - Programme 1 -  ⏳ Attente de 5 minutes avant le prochain scan (ou scan manuel)...
+2026-06-10 14:30:59,718 - Programme 2 - AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x000002E7CDC8B8C0> params=<ConnectionParameters host=localhost port=5672 virtual_host=/ ssl=False>>
+2026-06-10 14:30:59,719 - Programme 2 - AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x000002E7CDC8B8C0> params=<ConnectionParameters host=localhost port=5672 virtual_host=/ ssl=False>>
+2026-06-10 14:30:59,719 - Programme 2 - Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x000002E7CDC8B8C0> params=<ConnectionParameters host=localhost port=5672 virtual_host=/ ssl=False>>
+2026-06-10 14:30:59,720 - Programme 2 - Created channel=1
+2026-06-10 14:30:59,732 - Programme 2 -  [*] Programme 2 actif. Écoute de la file 'mp3_decouverts'... (CTRL+C pour quitter)
+2026-06-10 14:31:00,039 - Programme 3 - Pika version 1.4.1 connecting to ('::1', 5672, 0, 0)
+2026-06-10 14:31:00,041 - Programme 3 - Socket connected: <socket.socket fd=588, family=23, type=1, proto=6, laddr=('::1', 64677, 0, 0), raddr=('::1', 5672, 0, 0)>
+2026-06-10 14:31:00,043 - Programme 3 - Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x00000223590FD160>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x00000223590FD160> params=<ConnectionParameters host=localhost port=5672 virtual_host=/ ssl=False>>).
+2026-06-10 14:31:00,101 - Programme 3 - AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x00000223590FD160> params=<ConnectionParameters host=localhost port=5672 virtual_host=/ ssl=False>>
+2026-06-10 14:31:00,102 - Programme 3 - AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x00000223590FD160> params=<ConnectionParameters host=localhost port=5672 virtual_host=/ ssl=False>>
+2026-06-10 14:31:00,103 - Programme 3 - Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x00000223590FD160> params=<ConnectionParameters host=localhost port=5672 virtual_host=/ ssl=False>>
+2026-06-10 14:31:00,104 - Programme 3 - Created channel=1
+2026-06-10 14:31:00,113 - Programme 3 -  [*] Programme 3 actif. En attente de métadonnées à envoyer... (CTRL+C pour quitter)
+2026-06-10 14:35:09,759 - Programme 2 -  [%] Programme arrêté par l’utilisateur.
