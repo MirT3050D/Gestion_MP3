@@ -4,7 +4,7 @@ import subprocess
 import os
 import sys
 
-LOG_FILE = r"C:\Users\rahaj\Desktop\ITU\Info\Projet_Mr_Vahatra\Gestion_MP3\Desktop\log.txt"
+LOG_FILE = r"D:\NainaMP3\Gestion_MP3\Desktop\log.txt"
 
 class AppGestionMP3:
     def __init__(self, root):
@@ -53,7 +53,7 @@ class AppGestionMP3:
         try:
             # Récupérer le chemin de l'exécutable python actuel pour éviter des soucis d'environnement
             python_exe = sys.executable
-            dossier = r"C:\Users\rahaj\Desktop\ITU\Info\Projet_Mr_Vahatra\Gestion_MP3\Desktop"
+            dossier = r"D:\NainaMP3\Gestion_MP3\Desktop"
             
             p1 = subprocess.Popen([python_exe, "programme1.py"], cwd=dossier)
             p2 = subprocess.Popen([python_exe, "programme2.py"], cwd=dossier)
@@ -91,7 +91,7 @@ class AppGestionMP3:
         self.texte_log.configure(state=tk.DISABLED)
 
     def forcer_scan(self):
-        dossier = r"C:\Users\rahaj\Desktop\ITU\Info\Projet_Mr_Vahatra\Gestion_MP3\Desktop"
+        dossier = r"D:\NainaMP3\Gestion_MP3\Desktop"
         chemin_fichier = os.path.join(dossier, "force_scan.txt")
         try:
             with open(chemin_fichier, "w") as f:

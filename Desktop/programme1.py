@@ -5,9 +5,9 @@ import logging
 import time
 
 # 📁 Configuration du dossier et de RabbitMQ
-DOSSIER_MUSIQUE = r"C:\Users\rahaj\Desktop\ITU\Info\Projet_Mr_Vahatra\Gestion_MP3\musique"
+DOSSIER_MUSIQUE = r"D:\NainaMP3\musique"
 NOM_QUEUE = 'mp3_decouverts'
-LOG_FILE = r"C:\Users\rahaj\Desktop\ITU\Info\Projet_Mr_Vahatra\Gestion_MP3\Desktop\log.txt"
+LOG_FILE = r"D:\NainaMP3\Gestion_MP3\Desktop\log.txt"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -69,7 +69,6 @@ def scanner_et_envoyer():
             logging.info(f" ✅ {nouveaux_fichiers} nouveaux fichiers détectés et envoyés.")
             
         logging.info(" ⏳ Attente de 5 minutes avant le prochain scan (ou scan manuel)...")
-        
         # Attente de 300 secondes (5 minutes), interruptible si 'force_scan.txt' est créé
         for _ in range(300):
             if os.path.exists("force_scan.txt"):

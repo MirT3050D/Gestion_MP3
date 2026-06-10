@@ -4,8 +4,8 @@
     --border-color: #e5e7eb;
     --text-primary: #111827;
     --text-secondary: #6b7280;
-    --accent: #10b981; /* Spotify-like green or a nice blue #3b82f6 */
-    --accent-hover: #059669;
+    --accent: #3b82f6; /* Spotify-like green or a nice blue #3b82f6 */
+    --accent-hover: #055c96;
     --danger: #ef4444;
     --danger-hover: #dc2626;
     --sidebar-width: 260px;

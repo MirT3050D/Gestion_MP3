@@ -4,7 +4,7 @@ import os
 import requests
 import logging
 
-LOG_FILE = r"C:\Users\rahaj\Desktop\ITU\Info\Projet_Mr_Vahatra\Gestion_MP3\Desktop\log.txt"
+LOG_FILE = r"D:\NainaMP3\Gestion_MP3\Desktop\log.txt"
 
 logging.basicConfig(
     level=logging.INFO,

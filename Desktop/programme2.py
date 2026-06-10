@@ -4,7 +4,7 @@ import os
 from mutagen.mp3 import MP3
 import logging
 
-LOG_FILE = r"C:\Users\rahaj\Desktop\ITU\Info\Projet_Mr_Vahatra\Gestion_MP3\Desktop\log.txt"
+LOG_FILE = r"D:\NainaMP3\Gestion_MP3\Desktop\log.txt"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,6 +25,7 @@ def extraire_toutes_les_metadonnees(chemin_fichier):
     ainsi que la durée exacte en secondes.
     """
     try:
+        print("p2")
         audio = MP3(chemin_fichier)
         
         # ⏱️ Extraction de la durée (essentielle pour l'algorithme de playlist)
@@ -56,6 +57,7 @@ def callback(ch, method, properties, body):
     try:
         # 1. Lecture du message JSON reçu
         message_recu = json.loads(body.decode())
+        print(message_recu)
         chemin = message_recu["chemin_absolu"]
         logging.info(f" [->] Analyse en cours : {chemin}")
         
