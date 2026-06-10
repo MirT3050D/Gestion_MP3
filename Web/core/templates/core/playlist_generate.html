@@ -10,40 +10,43 @@
     
     <form method="post" action="{% url 'playlist_generate' %}" id="generate-form">
         {% csrf_token %}
-        <!-- Listes d'autocomplétion -->
-        <datalist id="genres-list">
-            {% for g in genres %}
-            <option value="{{ g }}">
-            {% endfor %}
-        </datalist>
-
-        <datalist id="artistes-list">
-            {% for a in artistes %}
-            <option value="{{ a }}">
-            {% endfor %}
-        </datalist>
-
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
                 <label for="genre"><i class="ph ph-music-note"></i> Inclure le Genre</label>
-                <input type="text" name="genre" id="genre" list="genres-list" class="form-control" placeholder="Taper ou sélectionner...">
+                <select multiple name="genre" id="genre" class="form-control" placeholder="Sélectionner ou taper...">
+                    {% for g in genres %}
+                    <option value="{{ g }}">{{ g }}</option>
+                    {% endfor %}
+                </select>
             </div>
             
             <div class="form-group">
                 <label for="genre_exclu"><i class="ph ph-prohibit"></i> Exclure le Genre</label>
-                <input type="text" name="genre_exclu" id="genre_exclu" list="genres-list" class="form-control" placeholder="Taper ou sélectionner...">
+                <select multiple name="genre_exclu" id="genre_exclu" class="form-control" placeholder="Sélectionner ou taper...">
+                    {% for g in genres %}
+                    <option value="{{ g }}">{{ g }}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
                 <label for="artiste"><i class="ph ph-microphone-stage"></i> Inclure l'Artiste</label>
-                <input type="text" name="artiste" id="artiste" list="artistes-list" class="form-control" placeholder="Taper ou sélectionner...">
+                <select multiple name="artiste" id="artiste" class="form-control" placeholder="Sélectionner ou taper...">
+                    {% for a in artistes %}
+                    <option value="{{ a }}">{{ a }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div class="form-group">
                 <label for="artiste_exclu"><i class="ph ph-prohibit"></i> Exclure l'Artiste</label>
-                <input type="text" name="artiste_exclu" id="artiste_exclu" list="artistes-list" class="form-control" placeholder="Taper ou sélectionner...">
+                <select multiple name="artiste_exclu" id="artiste_exclu" class="form-control" placeholder="Sélectionner ou taper...">
+                    {% for a in artistes %}
+                    <option value="{{ a }}">{{ a }}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
         
@@ -78,12 +81,46 @@
 @keyframes spin {
     100% { transform: rotate(360deg); }
 }
+/* Personnalisation TomSelect pour correspondre au thème sombre */
+.ts-control {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 0.5rem;
+}
+.ts-dropdown {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+.ts-dropdown .option:hover, .ts-dropdown .option.active {
+    background-color: var(--accent);
+    color: white;
+}
+.ts-control .item {
+    background-color: var(--accent) !important;
+    color: white !important;
+    border: none !important;
+}
 </style>
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
 <script>
 document.getElementById('generate-form').addEventListener('submit', function() {
     document.getElementById('btn-submit').style.display = 'none';
     document.getElementById('spinner-container').style.display = 'block';
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('select[multiple]').forEach(function(el) {
+        new TomSelect(el, {
+            plugins: ['remove_button'],
+            create: true, // Permet d'ajouter des mots clés manuellement
+            persist: false
+        });
+    });
 });
 </script>
 {% endblock %}
