@@ -1,0 +1,8 @@
+{
+  "artistes": [
+    "artiste_a_exclure"
+  ],
+  "genres": [
+    "genre_a_exclure"
+  ]
+}
