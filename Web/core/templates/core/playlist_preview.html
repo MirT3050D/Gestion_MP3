@@ -51,6 +51,10 @@
             <input type="text" name="nom" id="nom" value="Ma Playlist Parfaite" required>
         </div>
         <button type="submit" class="btn-primary" style="width: 100%;">Sauvegarder la playlist</button>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <a href="{% url 'playlist_generate' %}" class="btn-secondary" style="flex: 1;">Modifier les critères</a>
+            <a href="{% url 'playlist_cancel' %}" class="btn-danger" style="flex: 1;">Annuler</a>
+        </div>
     </form>
 </div>
 

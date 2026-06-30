@@ -3,8 +3,9 @@ import json
 import os
 import requests
 import logging
+import datetime
 
-from config import LOG_FILE, URL_API_DJANGO, BLACKLIST_FILE
+from config import LOG_FILE, URL_API_DJANGO, BLACKLIST_FILE, AETEBLACKLIST_TXT
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,19 +51,77 @@ def est_blackliste(metadonnees):
     try:
         with open(BLACKLIST_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-        blacklist_artistes = [a.strip().lower() for a in data.get("artistes", []) if a.strip()]
-        blacklist_genres = [g.strip().lower() for g in data.get("genres", []) if g.strip()]
         
-        artiste = str(metadonnees.get("artiste", "")).strip().lower()
-        genre = str(metadonnees.get("genre", "")).strip().lower()
+        # 1. Normaliser et collecter les regles
+        regles = []
+        if isinstance(data, list):
+            # Format moderne : liste directe de dictionnaires (regles)
+            regles = data
+        elif isinstance(data, dict):
+            # Format herite (Legacy)
+            # a) "artistes" -> regle {"artiste": artiste}
+            for a in data.get("artistes", []):
+                if isinstance(a, str) and a.strip():
+                    regles.append({"artiste": a.strip()})
+            # b) "genres" -> regle {"genre": genre}
+            for g in data.get("genres", []):
+                if isinstance(g, str) and g.strip():
+                    regles.append({"genre": g.strip()})
+            # c) "combinaisons" ou "regles" -> liste de dictionnaires
+            for c in data.get("combinaisons", []):
+                if isinstance(c, dict) and c:
+                    regles.append(c)
+            for r in data.get("regles", []):
+                if isinstance(r, dict) and r:
+                    regles.append(r)
         
-        if artiste and any(a == artiste for a in blacklist_artistes):
-            return True
-        if genre and any(g == genre for g in blacklist_genres):
-            return True
+        # 2. Verifier chaque regle
+        for regle in regles:
+            if not isinstance(regle, dict) or not regle:
+                continue
+            
+            match_complet = True
+            criteres_actifs = 0
+            
+            for cle, valeur_attendue in regle.items():
+                if valeur_attendue is None:
+                    continue
+                val_attendue_str = str(valeur_attendue).strip().lower()
+                if not val_attendue_str:
+                    continue
+                
+                criteres_actifs += 1
+                
+                # Recuperation et normalisation de la valeur de la piste
+                val_piste = metadonnees.get(cle)
+                if val_piste is None:
+                    match_complet = False
+                    break
+                
+                val_piste_str = str(val_piste).strip().lower()
+                if val_piste_str != val_attendue_str:
+                    match_complet = False
+                    break
+            
+            # Si au moins un critere actif est defini et qu'ils correspondent tous
+            if criteres_actifs > 0 and match_complet:
+                return True
+                
     except Exception as e:
         logging.error(f" Erreur lecture blacklist : {e}")
     return False
+
+def enregistrer_blackliste_txt(chemin, metadonnees):
+    try:
+        now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
+        nom_fichier = os.path.basename(chemin)
+        details_meta = ", ".join(f"'{k}': '{v}'" for k, v in metadonnees.items() if v)
+        log_line = f"{now_str} - Programme 3 - [BLACKLIST] - Fichier : {nom_fichier} | Chemin : {chemin} | Métadonnées : {{{details_meta}}}\n"
+        
+        with open(AETEBLACKLIST_TXT, "a", encoding="utf-8") as f:
+            f.write(log_line)
+    except Exception as e:
+        logging.error(f" Erreur lors de l'écriture dans aeteblacklist.txt : {e}")
 
 def callback(ch, method, properties, body):
     message_recu = json.loads(body.decode())
@@ -75,8 +134,10 @@ def callback(ch, method, properties, body):
         return
 
     # Verif blacklist
-    if est_blackliste(message_recu.get("metadonnees_completes", {})):
-        logging.info(f"  Fichier blacklist (artiste ou genre). Suppression du fichier local...")
+    meta_piste = message_recu.get("metadonnees_completes", {})
+    if est_blackliste(meta_piste):
+        logging.info(f"  Fichier blacklist. Enregistrement et suppression du fichier local...")
+        enregistrer_blackliste_txt(chemin, meta_piste)
         try:
             os.remove(chemin)
         except Exception as e:

@@ -25,36 +25,36 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <div class="form-group">
                 <label for="genre">Inclure le Genre</label>
-                <input type="text" name="genre" id="genre" list="genres-list" placeholder="Taper ou selectionner...">
+                <input type="text" name="genre" id="genre" list="genres-list" placeholder="Taper ou selectionner..." value="{{ criteria.genre|default:'' }}">
             </div>
             
             <div class="form-group">
                 <label for="genre_exclu">Exclure le Genre</label>
-                <input type="text" name="genre_exclu" id="genre_exclu" list="genres-list" placeholder="Taper ou selectionner...">
+                <input type="text" name="genre_exclu" id="genre_exclu" list="genres-list" placeholder="Taper ou selectionner..." value="{{ criteria.genre_exclu|default:'' }}">
             </div>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <div class="form-group">
                 <label for="artiste">Inclure l'Artiste</label>
-                <input type="text" name="artiste" id="artiste" list="artistes-list" placeholder="Taper ou selectionner...">
+                <input type="text" name="artiste" id="artiste" list="artistes-list" placeholder="Taper ou selectionner..." value="{{ criteria.artiste|default:'' }}">
             </div>
 
             <div class="form-group">
                 <label for="artiste_exclu">Exclure l'Artiste</label>
-                <input type="text" name="artiste_exclu" id="artiste_exclu" list="artistes-list" placeholder="Taper ou selectionner...">
+                <input type="text" name="artiste_exclu" id="artiste_exclu" list="artistes-list" placeholder="Taper ou selectionner..." value="{{ criteria.artiste_exclu|default:'' }}">
             </div>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <div class="form-group">
                 <label for="duree_minutes">Duree (Minutes)</label>
-                <input type="number" name="duree_minutes" id="duree_minutes" value="35" min="0" max="600">
+                <input type="number" name="duree_minutes" id="duree_minutes" value="{{ criteria.duree_minutes|default:'35' }}" min="0" max="600">
             </div>
             
             <div class="form-group">
                 <label for="duree_secondes">Duree (Secondes)</label>
-                <input type="number" name="duree_secondes" id="duree_secondes" value="0" min="0" max="59">
+                <input type="number" name="duree_secondes" id="duree_secondes" value="{{ criteria.duree_secondes|default:'0' }}" min="0" max="59">
             </div>
         </div>
         <p style="font-size: 0.85rem; color: var(--text-sec); margin-top: -5px; margin-bottom: 20px; text-align: center;">

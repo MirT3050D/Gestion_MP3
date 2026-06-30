@@ -120,6 +120,16 @@ def playlist_generate(request):
         duree_minutes = request.POST.get('duree_minutes')
         duree_secondes = request.POST.get('duree_secondes')
         
+        # Sauvegarder les criteres dans la session
+        request.session['playlist_criteria'] = {
+            'genre': genre,
+            'artiste': artiste,
+            'genre_exclu': genre_exclu,
+            'artiste_exclu': artiste_exclu,
+            'duree_minutes': duree_minutes,
+            'duree_secondes': duree_secondes,
+        }
+        
         target_seconds = None
         try:
             m_val = int(duree_minutes) if duree_minutes and duree_minutes.strip() else 0
@@ -173,9 +183,11 @@ def playlist_generate(request):
         request.session['temp_playlist'] = [m.id for m in selected_musics]
         return redirect('playlist_preview')
 
+    criteria = request.session.get('playlist_criteria', {})
     return render(request, 'core/playlist_generate.html', {
         'genres': genres_list,
-        'artistes': artistes_list
+        'artistes': artistes_list,
+        'criteria': criteria
     })
 
 @login_required
@@ -212,9 +224,19 @@ def playlist_save(request):
             # Nettoyer la session
             if 'temp_playlist' in request.session:
                 del request.session['temp_playlist']
+            if 'playlist_criteria' in request.session:
+                del request.session['playlist_criteria']
             
             return redirect('playlist_list')
     return redirect('playlist_preview')
+
+@login_required
+def playlist_cancel(request):
+    if 'temp_playlist' in request.session:
+        del request.session['temp_playlist']
+    if 'playlist_criteria' in request.session:
+        del request.session['playlist_criteria']
+    return redirect('playlist_generate')
 
 @login_required
 def playlist_list(request):
