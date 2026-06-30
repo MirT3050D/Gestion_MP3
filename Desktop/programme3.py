@@ -53,14 +53,8 @@ def est_blackliste(metadonnees):
         blacklist_artistes = [a.strip().lower() for a in data.get("artistes", []) if a.strip()]
         blacklist_genres = [g.strip().lower() for g in data.get("genres", []) if g.strip()]
         
-        artiste = ""
-        genre = ""
-        for k, v in metadonnees.items():
-            k_lower = k.lower()
-            if k_lower == "tpe1" or "artist" in k_lower:
-                artiste = str(v).strip().lower()
-            elif k_lower == "tcon" or "genre" in k_lower:
-                genre = str(v).strip().lower()
+        artiste = str(metadonnees.get("artiste", "")).strip().lower()
+        genre = str(metadonnees.get("genre", "")).strip().lower()
         
         if artiste and any(a == artiste for a in blacklist_artistes):
             return True

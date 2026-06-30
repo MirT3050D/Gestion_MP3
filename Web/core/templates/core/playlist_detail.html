@@ -2,64 +2,43 @@
 {% load static %}
 
 {% block content %}
-<div class="header-action">
+<div class="header-action" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <a href="{% url 'playlist_list' %}" class="btn-secondary">
-        <i class="ph ph-arrow-left"></i> Retour
+        Retour
     </a>
     <div class="action-bar">
         <a href="{% url 'playlist_export_zip' playlist.pk %}" class="btn-primary">
-            <i class="ph ph-download-simple"></i> Télécharger en ZIP
+            Telecharger en ZIP
         </a>
     </div>
 </div>
 
-<div class="detail-hero" style="margin-top: 1rem;">
-    <div style="width: 232px; height: 232px; background: linear-gradient(135deg, var(--accent), #3b82f6); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center;">
-        <i class="ph-fill ph-playlist" style="font-size: 5rem; color: white;"></i>
-    </div>
-    
-    <div class="detail-info">
-        <span class="detail-tag">Playlist</span>
-        <h1 class="detail-title">{{ playlist.nom }}</h1>
-        <p class="detail-artist">Par {{ playlist.utilisateur.username }}</p>
-        <p class="detail-meta">
-            {{ playlist.musiques.count }} titres • 
-            {{ total_minutes }} min {% if total_remainder_seconds %}{{ total_remainder_seconds }} sec{% endif %}
-        </p>
-    </div>
+<div class="detail-hero" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+    <h1 class="detail-title">{{ playlist.nom }}</h1>
+    <p class="detail-artist">Par {{ playlist.utilisateur.username }}</p>
+    <p class="detail-meta">
+        {{ playlist.musiques.count }} titres • 
+        {{ total_minutes }} min {% if total_remainder_seconds %}{{ total_remainder_seconds }} sec{% endif %}
+    </p>
 </div>
 
 <div class="music-list-container">
-    <div class="music-list-header">
-        <div>#</div>
-        <div>Titre</div>
-        <div>Durée</div>
-        <div></div>
-    </div>
-    
     {% for track in tracks %}
     <div class="music-row">
-        <div class="col-cover">
-            <img src="{% static 'img/default_cover.png' %}" alt="Cover">
-        </div>
-        
         <div class="col-title">
-            <span class="track-name">{% if track.fichier_mp3.metadonnees.titre %}{{ track.fichier_mp3.metadonnees.titre }}{% else %}{{ track.fichier_mp3.fichier.name|slice:"4:-4"|default:"Sans Titre" }}{% endif %}</span>
-            <span class="track-artist">{% if track.fichier_mp3.metadonnees.artiste %}{{ track.fichier_mp3.metadonnees.artiste }}{% else %}Artiste Inconnu{% endif %}</span>
+            <span class="track-name">{% if track.fichier_mp3.metadonnees.titre %}{{ track.fichier_mp3.metadonnees.titre }}{% else %}{{ track.fichier_mp3.fichier.name }}{% endif %}</span>
+            <span class="track-artist">{% if track.fichier_mp3.metadonnees.artiste %}{{ track.fichier_mp3.metadonnees.artiste }}{% elif track.fichier_mp3.metadonnees.artiste_album %}{{ track.fichier_mp3.metadonnees.artiste_album }}{% else %}Artiste Inconnu{% endif %}</span>
         </div>
         
-        <div class="col-duration">
+        <div class="col-duration" style="margin-left: auto; margin-right: 20px;">
             {{ track.fichier_mp3.duree_secondes }}s
         </div>
         
         <div class="col-actions">
-            <!-- Bouton pour lancer la lecture dans le player -->
-            <button class="action-btn" title="Lire" onclick="playTrack('{{ track.fichier_mp3.fichier.url }}', '{% if track.fichier_mp3.metadonnees.titre %}{{ track.fichier_mp3.metadonnees.titre|escapejs }}{% else %}{{ track.fichier_mp3.fichier.name|slice:'4:-4'|escapejs }}{% endif %}', '{% if track.fichier_mp3.metadonnees.artiste %}{{ track.fichier_mp3.metadonnees.artiste|escapejs }}{% else %}Artiste Inconnu{% endif %}')">
-                <i class="ph-fill ph-play-circle"></i>
+            <button class="action-btn" onclick="playTrack('{{ track.fichier_mp3.fichier.url }}', '{% if track.fichier_mp3.metadonnees.titre %}{{ track.fichier_mp3.metadonnees.titre|escapejs }}{% else %}{{ track.fichier_mp3.fichier.name|escapejs }}{% endif %}', '{% if track.fichier_mp3.metadonnees.artiste %}{{ track.fichier_mp3.metadonnees.artiste|escapejs }}{% elif track.fichier_mp3.metadonnees.artiste_album %}{{ track.fichier_mp3.metadonnees.artiste_album|escapejs }}{% else %}Artiste Inconnu{% endif %}')">
+                Lire
             </button>
-            <a href="{% url 'music_detail' track.fichier_mp3.pk %}" class="action-btn" title="Détails">
-                <i class="ph ph-info"></i>
-            </a>
+            <a href="{% url 'music_detail' track.fichier_mp3.pk %}" class="action-btn">Details</a>
         </div>
     </div>
     {% endfor %}

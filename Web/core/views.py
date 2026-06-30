@@ -63,6 +63,22 @@ def music_delete(request, pk):
         return redirect('music_list')
     return render(request, 'core/music_confirm_delete.html', {'music': music})
 
+@login_required
+@user_passes_test(staff_required, login_url='playlist_list')
+def music_reset(request):
+    if request.method == 'POST':
+        PlaylistTrack.objects.all().delete()
+        Playlist.objects.all().delete()
+        for music in FichierMP3.objects.all():
+            try:
+                music.fichier.delete()
+            except:
+                pass
+            music.delete()
+        messages.success(request, "La bibliotheque a ete reinitialisee.")
+        return redirect('music_list')
+    return redirect('music_list')
+
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -87,9 +103,9 @@ def playlist_generate(request):
     
     for m in all_musics:
         if m.metadonnees:
-            # Recherche des clés génériques ou des tags ID3 (TCON = Genre, TPE1 = Artiste)
+            # Recherche des cles generiques ou des tags ID3 (TCON = Genre, TPE1 = Artiste)
             g = m.metadonnees.get('genre') or m.metadonnees.get('TCON')
-            a = m.metadonnees.get('artiste') or m.metadonnees.get('TPE1')
+            a = m.metadonnees.get('artiste') or m.metadonnees.get('artiste_album') or m.metadonnees.get('TPE1') or m.metadonnees.get('TPE2')
             if g: genres_set.add(str(g).strip())
             if a: artistes_set.add(str(a).strip())
             
@@ -121,7 +137,7 @@ def playlist_generate(request):
             for music in queryset:
                 meta = music.metadonnees or {}
                 music_genre = str(meta.get('genre') or meta.get('TCON') or '').lower()
-                music_artiste = str(meta.get('artiste') or meta.get('TPE1') or '').lower()
+                music_artiste = str(meta.get('artiste') or meta.get('artiste_album') or meta.get('TPE1') or meta.get('TPE2') or '').lower()
                 
                 match = True
                 
@@ -146,11 +162,8 @@ def playlist_generate(request):
         # Algorithme
         if target_seconds:
             selected_musics = generate_playlist_algorithm(queryset, target_seconds)
-            total_duration = sum(m.duree_secondes for m in selected_musics if m.duree_secondes)
-            
-            if total_duration != target_seconds:
-                logger.warning(f"Impossible de générer une playlist de {target_seconds}s. Le plus proche trouvé est de {total_duration}s.")
-                messages.error(request, f"Aucune combinaison de musiques ne correspond exactement à la durée de {target_seconds} secondes ({m_val} min et {s_val} sec).")
+            if not selected_musics:
+                messages.error(request, "Aucune combinaison de musiques disponible pour cette duree.")
                 return redirect('playlist_generate')
         else:
             # Si pas de durée spécifiée, on prend tout ce qui matche (tous les sons)

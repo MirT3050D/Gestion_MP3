@@ -17,6 +17,7 @@ urlpatterns = [
     # --- Backoffice (Gestion des MP3) ---
     path('backoffice/', views.music_list, name='music_list'),
     path('backoffice/upload/', views.music_upload, name='music_upload'),
+    path('backoffice/reset/', views.music_reset, name='music_reset'),
     path('backoffice/<int:pk>/', views.music_detail, name='music_detail'),
     path('backoffice/<int:pk>/edit/', views.music_edit, name='music_edit'),
     path('backoffice/<int:pk>/delete/', views.music_delete, name='music_delete'),

@@ -19,22 +19,73 @@ logging.basicConfig(
 QUEUE_ENTREE = 'mp3_decouverts'
 QUEUE_SORTIE = 'metadata_extraites'
 
+ID3_MAPPING = {
+    "TIT2": "titre",
+    "TPE1": "artiste",
+    "TCON": "genre",
+    "TALB": "album",
+    "TRCK": "piste",
+    "TDRC": "annee",
+    "TYER": "annee",
+    "TORY": "annee_originale",
+    "TDAT": "date",
+    "TIME": "heure",
+    "COMM": "commentaire",
+    "TPE2": "artiste_album",
+    "TPOS": "disque",
+    "TSRC": "isrc",
+    "TIT1": "groupe",
+    "TIT3": "sous_titre",
+    "TEXT": "parolier",
+    "TCOM": "compositeur",
+    "TPE3": "chef_orchestre",
+    "TPE4": "interprete_remixeur",
+    "TPUB": "editeur",
+    "TLEN": "duree_ms",
+    "TMED": "type_media",
+    "TCOP": "copyright",
+    "USLT": "paroles",
+    "SYLT": "paroles_synchronisees"
+}
+
+def format_valeur(valeur):
+    if hasattr(valeur, 'text'):
+        if isinstance(valeur.text, list):
+            return "\n".join(str(x) for x in valeur.text)
+        return str(valeur.text)
+    return str(valeur)
+
 def extraire_toutes_les_metadonnees(chemin_fichier):
     try:
         print("p2")
         audio = MP3(chemin_fichier)
-        
-        # Extrait la duree
         duree_secondes = int(audio.info.length)
         
-        # Extrait les tags
         tags_complets = {}
+        # Extrait tags ID3
         for cle, valeur in audio.items():
-            # Conversion string pour JSON
-            tags_complets[str(cle)] = str(valeur)
+            base_key = cle.split(':')[0]
+            nom_lisible = ID3_MAPPING.get(base_key, cle)
+            tags_complets[nom_lisible] = format_valeur(valeur)
             
-        # Nom par defaut si pas de tag
-        if not tags_complets:
+        # Infos techniques
+        tags_complets["duree_secondes"] = duree_secondes
+        if hasattr(audio, 'info') and audio.info:
+            info = audio.info
+            if hasattr(info, 'bitrate') and info.bitrate:
+                tags_complets["bitrate_kbps"] = int(info.bitrate / 1000)
+            if hasattr(info, 'sample_rate') and info.sample_rate:
+                tags_complets["taux_echantillonnage_hz"] = info.sample_rate
+            if hasattr(info, 'channels') and info.channels:
+                tags_complets["canaux"] = info.channels
+
+        if "artiste_album" in tags_complets and "artiste" not in tags_complets:
+            tags_complets["artiste"] = tags_complets["artiste_album"]
+        elif "artiste" in tags_complets and "artiste_album" not in tags_complets:
+            tags_complets["artiste_album"] = tags_complets["artiste"]
+
+        if not tags_complets or all(k in ("duree_secondes", "bitrate_kbps", "taux_echantillonnage_hz", "canaux") for k in tags_complets):
+            # Nom par defaut
             tags_complets["nom_defaut"] = os.path.basename(chemin_fichier)
 
         return {

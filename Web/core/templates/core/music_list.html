@@ -2,70 +2,48 @@
 {% load static %}
 
 {% block content %}
-<div class="header-action">
-    <h1>Aperçu de la Bibliothèque</h1>
-    <a href="{% url 'music_upload' %}" class="btn-primary">
-        <i class="ph ph-upload-simple"></i> Uploader
-    </a>
+<div class="header-action" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1>Bibliotheque</h1>
+    <div style="display: flex; gap: 10px;">
+        <form action="{% url 'music_reset' %}" method="post" onsubmit="return confirm('Etes-vous sur de vouloir reinitialiser la bibliotheque ? Tout sera supprime.');">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger">
+                Reinitialiser
+            </button>
+        </form>
+        <a href="{% url 'music_upload' %}" class="btn-primary">
+            Uploader
+        </a>
+    </div>
 </div>
 
 <div class="music-list-container">
-    <div class="music-list-header">
-        <div>#</div>
-        <div>Titre</div>
-        <div>Date d'ajout</div>
-        <div><i class="ph ph-clock"></i></div>
-        <div></div>
-    </div>
-    
     {% for music in musics %}
     <div class="music-row">
-        <div class="col-cover">
-            <!-- On utilisera la vignette par défaut pour tous -->
-            <img src="{% static 'img/default_cover.png' %}" alt="Cover">
-        </div>
-        
         <div class="col-title">
-            <!-- Si metadonnées titre/artiste existent, on affiche, sinon le nom de fichier -->
             {% if music.metadonnees.titre %}
                 <span class="track-name">{{ music.metadonnees.titre }}</span>
-                <span class="track-artist">{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste }}{% else %}Artiste Inconnu{% endif %}</span>
+                <span class="track-artist">{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste }}{% elif music.metadonnees.artiste_album %}{{ music.metadonnees.artiste_album }}{% else %}Artiste Inconnu{% endif %}</span>
             {% else %}
-                <span class="track-name">{{ music.fichier.name|slice:"4:-4"|default:"Sans Titre" }}</span>
+                <span class="track-name">{{ music.fichier.name }}</span>
                 <span class="track-artist">Artiste Inconnu</span>
             {% endif %}
         </div>
         
-        <div class="col-date">
-            {{ music.date_upload|date:"d M Y" }}
-        </div>
-        
-        <div class="col-duration">
-            {% if music.duree_secondes %}{{ music.duree_secondes }}s{% else %}--{% endif %}
-        </div>
-        
         <div class="col-actions">
-            <!-- Bouton pour lancer la lecture dans le player du bas -->
-            <button class="action-btn" title="Lire" onclick="playTrack('{{ music.fichier.url }}', '{% if music.metadonnees.titre %}{{ music.metadonnees.titre|escapejs }}{% else %}{{ music.fichier.name|slice:'4:-4'|escapejs }}{% endif %}', '{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste|escapejs }}{% else %}Artiste Inconnu{% endif %}')">
-                <i class="ph-fill ph-play-circle"></i>
+            <button class="action-btn" onclick="playTrack('{{ music.fichier.url }}', '{% if music.metadonnees.titre %}{{ music.metadonnees.titre|escapejs }}{% else %}{{ music.fichier.name|escapejs }}{% endif %}', '{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste|escapejs }}{% elif music.metadonnees.artiste_album %}{{ music.metadonnees.artiste_album|escapejs }}{% else %}Artiste Inconnu{% endif %}')">
+                Lire
             </button>
-            <a href="{% url 'music_detail' music.pk %}" class="action-btn" title="Détails">
-                <i class="ph ph-info"></i>
-            </a>
-            <a href="{% url 'music_edit' music.pk %}" class="action-btn" title="Modifier">
-                <i class="ph ph-pencil-simple"></i>
-            </a>
-            <a href="{% url 'music_delete' music.pk %}" class="action-btn delete" title="Supprimer">
-                <i class="ph ph-trash"></i>
-            </a>
+            <a href="{% url 'music_detail' music.pk %}" class="action-btn">Details</a>
+            <a href="{% url 'music_edit' music.pk %}" class="action-btn">Modifier</a>
+            <a href="{% url 'music_delete' music.pk %}" class="action-btn" style="color: var(--danger);">Supprimer</a>
         </div>
     </div>
     {% empty %}
-    <div class="card" style="padding: 3rem; text-align: center; margin-top: 1rem;">
-        <i class="ph ph-music-notes" style="font-size: 3rem; color: var(--border-color); margin-bottom: 1rem;"></i>
-        <h2>Votre bibliothèque est vide</h2>
-        <p>Uploadez des fichiers ou lancez vos scripts Python pour peupler la base de données.</p>
+    <div class="card" style="padding: 30px; text-align: center;">
+        <p>Votre bibliotheque est vide.</p>
     </div>
     {% endfor %}
 </div>
+{% block extra_js %}{% endblock %}
 {% endblock %}
