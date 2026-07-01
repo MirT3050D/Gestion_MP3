@@ -2,21 +2,25 @@
 {% load static %}
 
 {% block content %}
-<div class="header-action" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h1>Mes Playlists</h1>
+<div class="header-action">
+    <h1><i class="ph-fill ph-playlist" style="color: var(--accent);"></i> Mes Playlists</h1>
     <a href="{% url 'playlist_generate' %}" class="btn-primary">
-        Creer une Playlist
+        <i class="ph ph-magic-wand"></i> Créer une Playlist
     </a>
 </div>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
     {% for playlist in playlists %}
-    <div class="card" style="display: flex; flex-direction: column;">
-        <h3 style="font-weight: bold; margin-bottom: 10px;">
+    <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column;">
+        <div style="width: 100%; aspect-ratio: 1; background: var(--border-color); border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center;">
+            <i class="ph ph-music-notes" style="font-size: 3rem; color: var(--text-secondary);"></i>
+        </div>
+        
+        <h3 style="font-weight: 700; margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             {{ playlist.nom }}
         </h3>
-        <p style="color: var(--text-sec); font-size: 0.85rem; margin-bottom: 15px;">
-            Creee le {{ playlist.date_creation|date:"d M Y" }}
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">
+            Créée le {{ playlist.date_creation|date:"d M Y" }}
             <br>
             {{ playlist.musiques.count }} titres
         </p>
@@ -26,9 +30,10 @@
         </a>
     </div>
     {% empty %}
-    <div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--border);">
+    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; background: var(--surface-color); border-radius: 12px; border: 1px dashed var(--border-color);">
+        <i class="ph ph-magic-wand" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
         <h2>Vous n'avez pas encore de playlist</h2>
-        <p style="color: var(--text-sec); margin-bottom: 15px;">Generez votre premiere playlist.</p>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Générez votre première playlist parfaite en fonction de votre temps disponible.</p>
         <a href="{% url 'playlist_generate' %}" class="btn-primary">Essayer l'algorithme</a>
     </div>
     {% endfor %}

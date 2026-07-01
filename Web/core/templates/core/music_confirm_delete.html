@@ -5,15 +5,15 @@
     <h1>Confirmer la suppression</h1>
 </div>
 
-<div class="card" style="max-width: 500px; margin-top: 20px;">
-    <p style="color: var(--danger); font-weight: bold; margin-bottom: 20px;">
-        Etes-vous sur de vouloir supprimer definitivement la musique: {{ music.fichier.name }} ? Cette action est irreversible.
-    </p>
+<div class="card p-4 delete-wrapper">
+    <div class="alert alert-danger mb-4">
+        <strong>Attention :</strong> Êtes-vous sûr de vouloir supprimer définitivement la musique <em>{{ music.fichier.name }}</em> ? Cette action est irréversible.
+    </div>
     
     <form method="post">
         {% csrf_token %}
         <button type="submit" class="btn-danger">Oui, Supprimer</button>
-        <a href="{% url 'music_list' %}" class="btn-secondary" style="margin-left: 10px;">Annuler</a>
+        <a href="{% url 'music_list' %}" class="btn-text ml-2">Annuler</a>
     </form>
 </div>
 {% endblock %}

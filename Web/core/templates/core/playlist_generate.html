@@ -2,11 +2,11 @@
 
 {% block content %}
 <div class="header-action">
-    <h1>Generateur de Playlist</h1>
+    <h1><i class="ph ph-magic-wand" style="color: var(--accent);"></i> Générateur de Playlist</h1>
 </div>
 
 <div class="form-wrapper">
-    <p style="margin-bottom: 20px;">Laissez notre algorithme construire la playlist parfaite pour vous, selon la duree desiree.</p>
+    <p style="color: var(--text-secondary); margin-bottom: 2rem;">Laissez notre algorithme construire la playlist parfaite pour vous, selon la durée exacte que vous désirez.</p>
     
     <form method="post" action="{% url 'playlist_generate' %}" id="generate-form">
         {% csrf_token %}
@@ -30,7 +30,7 @@
             </div>
         </div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
                 <label for="artiste"><i class="ph ph-microphone-stage"></i> Inclure l'Artiste</label>
                 <select multiple name="artiste" id="artiste" class="form-control" placeholder="Sélectionner ou taper...">
@@ -50,27 +50,29 @@
             </div>
         </div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
-                <label for="duree_minutes">Duree (Minutes)</label>
-                <input type="number" name="duree_minutes" id="duree_minutes" value="{{ criteria.duree_minutes|default:'35' }}" min="0" max="600">
+                <label for="duree_minutes"><i class="ph ph-clock"></i> Durée exacte (Minutes)</label>
+                <input type="number" name="duree_minutes" id="duree_minutes" value="35" min="0" max="600" class="form-control">
             </div>
             
             <div class="form-group">
-                <label for="duree_secondes">Duree (Secondes)</label>
-                <input type="number" name="duree_secondes" id="duree_secondes" value="{{ criteria.duree_secondes|default:'0' }}" min="0" max="59">
+                <label for="duree_secondes"><i class="ph ph-clock"></i> Durée exacte (Secondes)</label>
+                <input type="number" name="duree_secondes" id="duree_secondes" value="0" min="0" max="59" class="form-control">
             </div>
         </div>
-        <p style="font-size: 0.85rem; color: var(--text-sec); margin-top: -5px; margin-bottom: 20px; text-align: center;">
-            <i>Laissez les deux champs a 0 pour inclure toutes les musiques trouvees. La combinaison finale sera la plus proche de la duree demandee (un depassement de 59 secondes maximum est accepte).</i>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: -1rem; margin-bottom: 1.5rem; text-align: center;">
+            <i>Laissez les deux champs à 0 pour inclure toutes les musiques trouvées. La combinaison finale doit correspondre à la seconde près.</i>
         </p>
         
-        <button type="submit" class="btn-primary" id="btn-submit" style="width: 100%; font-size: 1.1rem; padding: 12px;">
-            Generer la Playlist
+        <button type="submit" class="btn-primary w-100" id="btn-submit" style="font-size: 1.1rem; padding: 1rem;">
+            <i class="ph-bold ph-lightning"></i> Générer la Playlist
         </button>
         
-        <div id="spinner-container" style="display: none; text-align: center; margin-top: 20px;">
-            <p style="font-weight: 500;">Notre algorithme calcule la meilleure combinaison...</p>
+        <!-- Spinner caché par défaut -->
+        <div id="spinner-container" style="display: none; text-align: center; margin-top: 2rem;">
+            <i class="ph ph-spinner-gap" style="font-size: 3rem; color: var(--accent); animation: spin 1s linear infinite;"></i>
+            <p style="margin-top: 1rem; color: var(--text-secondary); font-weight: 500;">Notre algorithme calcule la meilleure combinaison...</p>
         </div>
     </form>
 </div>

@@ -4,7 +4,7 @@ import os
 from mutagen.mp3 import MP3
 import logging
 
-from config import LOG_FILE
+LOG_FILE = r"C:\Users\rahaj\Desktop\ITU\Info\Projet_Mr_Vahatra\Gestion_MP3\Desktop\log.txt"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,77 +15,29 @@ logging.basicConfig(
     ]
 )
 
-# Config queues RabbitMQ
+# 📥 Configuration des files d'attente RabbitMQ
 QUEUE_ENTREE = 'mp3_decouverts'
 QUEUE_SORTIE = 'metadata_extraites'
 
-ID3_MAPPING = {
-    "TIT2": "titre",
-    "TPE1": "artiste",
-    "TCON": "genre",
-    "TALB": "album",
-    "TRCK": "piste",
-    "TDRC": "annee",
-    "TYER": "annee",
-    "TORY": "annee_originale",
-    "TDAT": "date",
-    "TIME": "heure",
-    "COMM": "commentaire",
-    "TPE2": "artiste_album",
-    "TPOS": "disque",
-    "TSRC": "isrc",
-    "TIT1": "groupe",
-    "TIT3": "sous_titre",
-    "TEXT": "parolier",
-    "TCOM": "compositeur",
-    "TPE3": "chef_orchestre",
-    "TPE4": "interprete_remixeur",
-    "TPUB": "editeur",
-    "TLEN": "duree_ms",
-    "TMED": "type_media",
-    "TCOP": "copyright",
-    "USLT": "paroles",
-    "SYLT": "paroles_synchronisees"
-}
-
-def format_valeur(valeur):
-    if hasattr(valeur, 'text'):
-        if isinstance(valeur.text, list):
-            return "\n".join(str(x) for x in valeur.text)
-        return str(valeur.text)
-    return str(valeur)
-
 def extraire_toutes_les_metadonnees(chemin_fichier):
+    """
+    Ouvre le MP3 et extrait absolument toutes les métadonnées disponibles
+    ainsi que la durée exacte en secondes.
+    """
     try:
-        print("p2")
         audio = MP3(chemin_fichier)
+        
+        # ⏱️ Extraction de la durée (essentielle pour l'algorithme de playlist)
         duree_secondes = int(audio.info.length)
         
+        # 🏷️ Extraction de l'intégralité des tags présents dans le fichier
         tags_complets = {}
-        # Extrait tags ID3
         for cle, valeur in audio.items():
-            base_key = cle.split(':')[0]
-            nom_lisible = ID3_MAPPING.get(base_key, cle)
-            tags_complets[nom_lisible] = format_valeur(valeur)
+            # On convertit les clés et les valeurs en texte pour la compatibilité JSON
+            tags_complets[str(cle)] = str(valeur)
             
-        # Infos techniques
-        tags_complets["duree_secondes"] = duree_secondes
-        if hasattr(audio, 'info') and audio.info:
-            info = audio.info
-            if hasattr(info, 'bitrate') and info.bitrate:
-                tags_complets["bitrate_kbps"] = int(info.bitrate / 1000)
-            if hasattr(info, 'sample_rate') and info.sample_rate:
-                tags_complets["taux_echantillonnage_hz"] = info.sample_rate
-            if hasattr(info, 'channels') and info.channels:
-                tags_complets["canaux"] = info.channels
-
-        if "artiste_album" in tags_complets and "artiste" not in tags_complets:
-            tags_complets["artiste"] = tags_complets["artiste_album"]
-        elif "artiste" in tags_complets and "artiste_album" not in tags_complets:
-            tags_complets["artiste_album"] = tags_complets["artiste"]
-
-        if not tags_complets or all(k in ("duree_secondes", "bitrate_kbps", "taux_echantillonnage_hz", "canaux") for k in tags_complets):
-            # Nom par defaut
+        # 🧩 Si aucun tag n'est trouvé, on met au moins le nom du fichier par défaut
+        if not tags_complets:
             tags_complets["nom_defaut"] = os.path.basename(chemin_fichier)
 
         return {
@@ -95,55 +47,54 @@ def extraire_toutes_les_metadonnees(chemin_fichier):
         }
         
     except Exception as e:
-        # Erreur de lecture
-        logging.error(f" Erreur lors de la lecture du fichier {chemin_fichier} : {e}")
+        # 📝 En cas d'erreur (fichier corrompu, etc.), on log et on retourne None
+        logging.error(f" ❌ Erreur lors de la lecture du fichier {chemin_fichier} : {e}")
         return None
 
 def callback(ch, method, properties, body):
-    # Callback message P1
+    """Fonction déclenchée à la réception d'un message du Programme 1."""
     try:
-        # 1. JSON
+        # 1. Lecture du message JSON reçu
         message_recu = json.loads(body.decode())
-        print(message_recu)
         chemin = message_recu["chemin_absolu"]
         logging.info(f" [->] Analyse en cours : {chemin}")
         
-        # 2. Extraction
+        # 2. Extraction de toutes les métadonnées
         infos = extraire_toutes_les_metadonnees(chemin)
         
-        # 3. Envoi P3
+        # 3. Si l'extraction a réussi, on envoie le tout au Programme 3
         if infos:
             ch.basic_publish(
                 exchange='',
                 routing_key=QUEUE_SORTIE,
                 body=json.dumps(infos)
             )
-            logging.info(f" [<-] Toutes les metadonnees ont ete envoyees dans la file '{QUEUE_SORTIE}'")
+            logging.info(f" [<-] Toutes les métadonnées ont été envoyées dans la file '{QUEUE_SORTIE}'")
             
     except Exception as e:
-        logging.error(f" Erreur generale lors du traitement du message : {e}")
+        logging.error(f" ❌ Erreur générale lors du traitement du message : {e}")
         
     finally:
-        # Accuse de reception
+        # 4. Accusé de réception envoyé à RabbitMQ pour libérer le message d'entrée
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def main():
-    # Connexion RabbitMQ
+    # 🔌 Connexion au serveur RabbitMQ local
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
     
-    # Declaration des deux files
+    # 📥 Déclaration des deux files d'attente (sécurité si elles n'existent pas)
     channel.queue_declare(queue=QUEUE_ENTREE)
     channel.queue_declare(queue=QUEUE_SORTIE)
     
-    # Configuration ecoute
+    # 🎧 Configuration de l'écoute active
     channel.basic_consume(queue=QUEUE_ENTREE, on_message_callback=callback)
     
-    logging.info(f" [*] Programme 2 actif. Ecoute de la file '{QUEUE_ENTREE}'... (CTRL+C pour quitter)")
+    logging.info(f" [*] Programme 2 actif. Écoute de la file '{QUEUE_ENTREE}'... (CTRL+C pour quitter)")
     channel.start_consuming()
 
 if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        logging.info(' [%] Programme arrete par l\'utilisateur.')
+        logging.info(' [%] Programme arrêté par l’utilisateur.')

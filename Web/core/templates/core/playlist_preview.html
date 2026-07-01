@@ -2,41 +2,51 @@
 {% load static %}
 
 {% block content %}
-<div class="header-action" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h1>Playlist Generee</h1>
+<div class="header-action">
+    <h1><i class="ph-fill ph-check-circle" style="color: var(--accent);"></i> Playlist Générée</h1>
     
     <div style="text-align: right;">
         <h2 style="margin: 0;">{{ total_minutes }} min {% if total_remainder_seconds %}{{ total_remainder_seconds }} sec{% endif %}</h2>
-        <span style="color: var(--text-sec); font-size: 0.9rem;">Duree totale</span>
+        <span style="color: var(--text-secondary); font-size: 0.9rem;">Durée totale de la combinaison</span>
     </div>
 </div>
 
 <!-- Modal de remplacement -->
 <div id="replace-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;">
-    <div class="card" style="width: 500px; max-width: 90vw; background: var(--surface);">
-        <h3 style="margin-bottom: 15px;">Remplacer par un titre de meme duree</h3>
+    <div class="card p-4" style="width: 500px; max-width: 90vw; background: var(--surface-color);">
+        <h3 style="margin-bottom: 1rem;">Remplacer par un titre de même durée</h3>
         <ul id="alternatives-list" style="list-style: none; padding: 0;">
             <!-- Rempli par AJAX -->
         </ul>
-        <div style="text-align: right; margin-top: 15px;">
+        <div style="text-align: right; margin-top: 1rem;">
             <button class="btn-secondary" onclick="closeModal()">Annuler</button>
         </div>
     </div>
 </div>
 
-<div class="music-list-container" style="margin-bottom: 20px;">
+<div class="music-list-container mb-4">
+    <div class="music-list-header">
+        <div>#</div>
+        <div>Titre</div>
+        <div>Durée</div>
+        <div></div>
+    </div>
+    
     {% for music in musics %}
     <div class="music-row">
-        <div class="col-title">
-            <span class="track-name">{% if music.metadonnees.titre %}{{ music.metadonnees.titre }}{% else %}{{ music.fichier.name }}{% endif %}</span>
-            <span class="track-artist">{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste }}{% elif music.metadonnees.artiste_album %}{{ music.metadonnees.artiste_album }}{% else %}Artiste Inconnu{% endif %}</span>
+        <div class="col-cover">
+            <img src="{% static 'img/default_cover.png' %}" alt="Cover">
         </div>
-        <div class="col-duration" style="margin-left: auto; margin-right: 20px;">
+        <div class="col-title">
+            <span class="track-name">{% if music.metadonnees.titre %}{{ music.metadonnees.titre }}{% else %}{{ music.fichier.name|slice:"4:-4"|default:"Sans Titre" }}{% endif %}</span>
+            <span class="track-artist">{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste }}{% else %}Artiste Inconnu{% endif %}</span>
+        </div>
+        <div class="col-duration">
             {{ music.duree_secondes }}s
         </div>
         <div class="col-actions">
-            <button class="action-btn" onclick="openReplaceModal({{ music.id }})">
-                Remplacer
+            <button class="action-btn" title="Remplacer" onclick="openReplaceModal({{ music.id }})">
+                <i class="ph ph-arrows-left-right"></i>
             </button>
         </div>
     </div>
@@ -50,11 +60,7 @@
             <label for="nom">Nom de la playlist</label>
             <input type="text" name="nom" id="nom" value="Ma Playlist Parfaite" required>
         </div>
-        <button type="submit" class="btn-primary" style="width: 100%;">Sauvegarder la playlist</button>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <a href="{% url 'playlist_generate' %}" class="btn-secondary" style="flex: 1;">Modifier les critères</a>
-            <a href="{% url 'playlist_cancel' %}" class="btn-danger" style="flex: 1;">Annuler</a>
-        </div>
+        <button type="submit" class="btn-primary w-100">Sauvegarder la playlist</button>
     </form>
 </div>
 
@@ -88,17 +94,17 @@ function openReplaceModal(trackId) {
             if(data.alternatives && data.alternatives.length > 0) {
                 data.alternatives.forEach(alt => {
                     html += `
-                        <li style="padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                        <li style="padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <strong>${alt.titre}</strong><br>
-                                <span style="font-size: 0.8rem; color: var(--text-sec);">${alt.artiste}</span>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">${alt.artiste}</span>
                             </div>
                             <button class="btn-primary" onclick="confirmReplace(${alt.id})">Choisir</button>
                         </li>
                     `;
                 });
             } else {
-                html = '<p>Aucune alternative de meme duree exacte trouvee.</p>';
+                html = '<p>Aucune alternative de même durée exacte trouvée.</p>';
             }
             document.getElementById('alternatives-list').innerHTML = html;
         });

@@ -10,7 +10,6 @@ urlpatterns = [
     path('playlist/generate/', views.playlist_generate, name='playlist_generate'),
     path('playlist/preview/', views.playlist_preview, name='playlist_preview'),
     path('playlist/save/', views.playlist_save, name='playlist_save'),
-    path('playlist/cancel/', views.playlist_cancel, name='playlist_cancel'),
     path('playlists/', views.playlist_list, name='playlist_list'),
     path('playlists/<int:pk>/', views.playlist_detail, name='playlist_detail'),
     path('playlists/<int:pk>/export/', views.playlist_export_zip, name='playlist_export_zip'),
@@ -18,7 +17,6 @@ urlpatterns = [
     # --- Backoffice (Gestion des MP3) ---
     path('backoffice/', views.music_list, name='music_list'),
     path('backoffice/upload/', views.music_upload, name='music_upload'),
-    path('backoffice/reset/', views.music_reset, name='music_reset'),
     path('backoffice/<int:pk>/', views.music_detail, name='music_detail'),
     path('backoffice/<int:pk>/edit/', views.music_edit, name='music_edit'),
     path('backoffice/<int:pk>/delete/', views.music_delete, name='music_delete'),

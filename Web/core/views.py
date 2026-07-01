@@ -63,22 +63,6 @@ def music_delete(request, pk):
         return redirect('music_list')
     return render(request, 'core/music_confirm_delete.html', {'music': music})
 
-@login_required
-@user_passes_test(staff_required, login_url='playlist_list')
-def music_reset(request):
-    if request.method == 'POST':
-        PlaylistTrack.objects.all().delete()
-        Playlist.objects.all().delete()
-        for music in FichierMP3.objects.all():
-            try:
-                music.fichier.delete()
-            except:
-                pass
-            music.delete()
-        messages.success(request, "La bibliotheque a ete reinitialisee.")
-        return redirect('music_list')
-    return redirect('music_list')
-
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -103,9 +87,9 @@ def playlist_generate(request):
     
     for m in all_musics:
         if m.metadonnees:
-            # Recherche des cles generiques ou des tags ID3 (TCON = Genre, TPE1 = Artiste)
+            # Recherche des clés génériques ou des tags ID3 (TCON = Genre, TPE1 = Artiste)
             g = m.metadonnees.get('genre') or m.metadonnees.get('TCON')
-            a = m.metadonnees.get('artiste') or m.metadonnees.get('artiste_album') or m.metadonnees.get('TPE1') or m.metadonnees.get('TPE2')
+            a = m.metadonnees.get('artiste') or m.metadonnees.get('TPE1')
             if g: genres_set.add(str(g).strip())
             if a: artistes_set.add(str(a).strip())
             
@@ -113,22 +97,31 @@ def playlist_generate(request):
     artistes_list = sorted(list(artistes_set))
 
     if request.method == 'POST':
-        genre = request.POST.get('genre')
-        artiste = request.POST.get('artiste')
-        genre_exclu = request.POST.get('genre_exclu')
-        artiste_exclu = request.POST.get('artiste_exclu')
+        # Avec un <select multiple>, les valeurs arrivent sous forme de liste
+        genres_list_post = request.POST.getlist('genre')
+        artistes_list_post = request.POST.getlist('artiste')
+        genres_exclus_list_post = request.POST.getlist('genre_exclu')
+        artistes_exclus_list_post = request.POST.getlist('artiste_exclu')
+        
+        # Pour gérer aussi le cas où certaines valeurs contiennent des virgules (ex: tapé manuellement)
+        genres_inclus = []
+        for g in genres_list_post:
+            genres_inclus.extend([x.strip().lower() for x in g.split(',') if x.strip()])
+            
+        artistes_inclus = []
+        for a in artistes_list_post:
+            artistes_inclus.extend([x.strip().lower() for x in a.split(',') if x.strip()])
+            
+        genres_exclus = []
+        for g in genres_exclus_list_post:
+            genres_exclus.extend([x.strip().lower() for x in g.split(',') if x.strip()])
+            
+        artistes_exclus = []
+        for a in artistes_exclus_list_post:
+            artistes_exclus.extend([x.strip().lower() for x in a.split(',') if x.strip()])
+            
         duree_minutes = request.POST.get('duree_minutes')
         duree_secondes = request.POST.get('duree_secondes')
-        
-        # Sauvegarder les criteres dans la session
-        request.session['playlist_criteria'] = {
-            'genre': genre,
-            'artiste': artiste,
-            'genre_exclu': genre_exclu,
-            'artiste_exclu': artiste_exclu,
-            'duree_minutes': duree_minutes,
-            'duree_secondes': duree_secondes,
-        }
         
         target_seconds = None
         try:
@@ -139,55 +132,80 @@ def playlist_generate(request):
         except ValueError:
             target_seconds = None
 
-        queryset = all_musics
+        filtered_queryset = []
+        priority_ids = []
         
-        # Filtres d'inclusion et d'exclusion
-        if genre or artiste or genre_exclu or artiste_exclu:
-            filtered_queryset = []
-            for music in queryset:
-                meta = music.metadonnees or {}
-                music_genre = str(meta.get('genre') or meta.get('TCON') or '').lower()
-                music_artiste = str(meta.get('artiste') or meta.get('artiste_album') or meta.get('TPE1') or meta.get('TPE2') or '').lower()
+        for music in all_musics:
+            meta = music.metadonnees or {}
+            music_genre = str(meta.get('genre') or meta.get('TCON') or '').lower()
+            music_artiste = str(meta.get('artiste') or meta.get('TPE1') or '').lower()
+            
+            # 1. Vérification des exclusions
+            is_excluded = False
+            for g_ex in genres_exclus:
+                if g_ex in music_genre and music_genre != '':
+                    is_excluded = True
+                    break
+            if not is_excluded:
+                for a_ex in artistes_exclus:
+                    if a_ex in music_artiste and music_artiste != '':
+                        is_excluded = True
+                        break
+            
+            if is_excluded:
+                continue # Ignore cette musique totalement
                 
-                match = True
-                
-                # Inclusions
-                if genre and genre.lower() not in music_genre:
-                    match = False
-                if artiste and artiste.lower() not in music_artiste:
-                    match = False
-                    
-                # Exclusions
-                if genre_exclu and genre_exclu.lower() in music_genre and music_genre != '':
-                    match = False
-                if artiste_exclu and artiste_exclu.lower() in music_artiste and music_artiste != '':
-                    match = False
-                
-                if match:
-                    filtered_queryset.append(music)
-            queryset = filtered_queryset
-        else:
-            queryset = list(queryset) # Convertir en liste si pas de filtre
+            # 2. Vérification des inclusions (pour la priorité)
+            match_genre = False
+            if not genres_inclus:
+                match_genre = True
+            else:
+                for g_in in genres_inclus:
+                    if g_in in music_genre:
+                        match_genre = True
+                        break
+                        
+            match_artiste = False
+            if not artistes_inclus:
+                match_artiste = True
+            else:
+                for a_in in artistes_inclus:
+                    if a_in in music_artiste:
+                        match_artiste = True
+                        break
+                        
+            is_priority = match_genre and match_artiste
+            
+            filtered_queryset.append(music)
+            if is_priority:
+                priority_ids.append(music.id)
+
+        queryset = filtered_queryset
         
         # Algorithme
         if target_seconds:
-            selected_musics = generate_playlist_algorithm(queryset, target_seconds)
-            if not selected_musics:
-                messages.error(request, "Aucune combinaison de musiques disponible pour cette duree.")
+            selected_musics = generate_playlist_algorithm(queryset, target_seconds, priority_ids=priority_ids)
+            total_duration = sum(m.duree_secondes for m in selected_musics if m.duree_secondes)
+            
+            if total_duration != target_seconds:
+                logger.warning(f"Impossible de générer une playlist de {target_seconds}s. Le plus proche trouvé est de {total_duration}s.")
+                messages.error(request, f"Aucune combinaison de musiques ne correspond exactement à la durée de {target_seconds} secondes ({m_val} min et {s_val} sec).")
                 return redirect('playlist_generate')
         else:
-            # Si pas de durée spécifiée, on prend tout ce qui matche (tous les sons)
-            selected_musics = queryset
+            # Si pas de durée spécifiée, on ne prend que les musiques prioritaires (celles qui matchent les inclusions)
+            selected_musics = [m for m in queryset if m.id in priority_ids]
+            
+            # Si aucune musique ne matche les inclusions (ou si pas d'inclusions), on prend tout ce qui n'est pas exclu
+            if not selected_musics and not (genres_inclus or artistes_inclus):
+                selected_musics = queryset
         
         # Sauvegarde temporaire dans la session
         request.session['temp_playlist'] = [m.id for m in selected_musics]
         return redirect('playlist_preview')
 
-    criteria = request.session.get('playlist_criteria', {})
     return render(request, 'core/playlist_generate.html', {
         'genres': genres_list,
-        'artistes': artistes_list,
-        'criteria': criteria
+        'artistes': artistes_list
     })
 
 @login_required
@@ -224,19 +242,9 @@ def playlist_save(request):
             # Nettoyer la session
             if 'temp_playlist' in request.session:
                 del request.session['temp_playlist']
-            if 'playlist_criteria' in request.session:
-                del request.session['playlist_criteria']
             
             return redirect('playlist_list')
     return redirect('playlist_preview')
-
-@login_required
-def playlist_cancel(request):
-    if 'temp_playlist' in request.session:
-        del request.session['temp_playlist']
-    if 'playlist_criteria' in request.session:
-        del request.session['playlist_criteria']
-    return redirect('playlist_generate')
 
 @login_required
 def playlist_list(request):

@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="header-action" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<div class="header-action">
     <h1>{{ title }}</h1>
-    <a href="{% url 'music_list' %}" class="btn-secondary">
-        Annuler
+    <a href="{% url 'music_list' %}" class="btn-text">
+        <i class="ph ph-arrow-left"></i> Annuler
     </a>
 </div>
 
-<div class="card form-wrapper">
+<div class="card p-4 form-wrapper">
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <div style="margin-top: 20px;">
+        <div class="mt-4">
             <button type="submit" class="btn-primary">Enregistrer</button>
         </div>
     </form>

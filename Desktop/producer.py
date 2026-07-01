@@ -9,7 +9,7 @@ channel = connection.channel()
 channel.queue_declare(queue='mp3_decouverts')
 
 # 3. Préparation du message (on simule les données d'un MP3 trouvé)
-data = {"chemin_fichier": "D:\\NainaMP3\\musique\\exemple.mp3"}
+data = {"chemin_fichier": "C:/ma_musique/chanson.mp3"}
 message = json.dumps(data)
 
 # 4. Envoi du message dans la file
