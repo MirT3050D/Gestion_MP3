@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1><i class="ph-fill ph-git-merge" style="color: var(--accent);"></i> Fusionner des Playlists</h1>
+    <a href="{% url 'playlist_list' %}" class="btn-secondary">
+        <i class="ph ph-arrow-left"></i> Retour aux playlists
+    </a>
+</div>
+
+<div class="form-wrapper" style="max-width: 700px; margin-top: 2rem;">
+    <p style="margin-bottom: 2rem;">Sélectionnez au moins deux playlists existantes pour les combiner en une nouvelle playlist. L'ordre des morceaux sera préservé sans doublons.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="nom"><i class="ph ph-tag"></i> Nom de la nouvelle playlist fusionnée</label>
+            <input type="text" id="nom" name="nom" required placeholder="Ex: Mon Mega Mix Summer 2026" class="form-control" style="font-size: 1.1rem; padding: 0.8rem 1rem;">
+        </div>
+
+        <div class="form-group" style="margin-top: 2rem;">
+            <label style="margin-bottom: 1rem;"><i class="ph ph-list-checks"></i> Playlists à fusionner (cochez-en au moins 2)</label>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 350px; overflow-y: auto; padding-right: 0.5rem;">
+                {% for playlist in playlists %}
+                <label class="card" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; cursor: pointer; margin-bottom: 0; border: 1px solid var(--border-color); transition: all 0.2s;">
+                    <input type="checkbox" name="playlists" value="{{ playlist.id }}" style="width: 20px; height: 20px; accent-color: var(--accent);">
+                    <div style="flex-grow: 1;">
+                        <span style="font-weight: 700; color: var(--text-primary); display: block; font-size: 1rem;">{{ playlist.nom }}</span>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ playlist.musiques.count }} titre{{ playlist.musiques.count|pluralize }} • Créée le {{ playlist.date_creation|date:"d M Y" }}</span>
+                    </div>
+                </label>
+                {% empty %}
+                <p>Aucune playlist disponible.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2.5rem;">
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+                <i class="ph ph-git-merge"></i> Lancer la Fusion
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

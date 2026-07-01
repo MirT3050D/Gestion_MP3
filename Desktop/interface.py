@@ -58,16 +58,18 @@ class AppGestionMP3:
             p1 = subprocess.Popen([python_exe, "programme1.py"], cwd=dossier)
             p2 = subprocess.Popen([python_exe, "programme2.py"], cwd=dossier)
             p3 = subprocess.Popen([python_exe, "programme3.py"], cwd=dossier)
+            p4 = subprocess.Popen([python_exe, "programme4.py"], cwd=dossier)
             
-            self.processus.extend([p1, p2, p3])
+            self.processus.extend([p1, p2, p3, p4])
             
             self.btn_lancer.config(state=tk.DISABLED, bg="#555555")
             self.btn_arreter.config(state=tk.NORMAL, bg="#f44336")
             self.btn_forcer_scan.config(state=tk.NORMAL, bg="#ff9800")
             
             self.ecrire_log_interface("-" * 50 + "\n")
-            self.ecrire_log_interface("✅ Les 3 programmes ont été lancés en arrière-plan.\n")
+            self.ecrire_log_interface("✅ Les 4 programmes ont été lancés en arrière-plan.\n")
             self.ecrire_log_interface("-" * 50 + "\n")
+
         except Exception as e:
             messagebox.showerror("Erreur", f"Impossible de lancer les programmes : {e}")
 

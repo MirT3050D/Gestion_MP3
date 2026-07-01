@@ -462,6 +462,21 @@ input:focus, textarea:focus { outline: none; border-color: var(--accent); box-sh
     color: var(--danger);
     border: 1px solid #f87171;
 }
+.alert-success {
+    background-color: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+.alert-warning {
+    background-color: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+.alert-info {
+    background-color: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
 .errorlist {
     color: var(--danger);
     list-style: none;

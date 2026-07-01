@@ -32,6 +32,9 @@
                 <a href="{% url 'playlist_generate' %}" class="nav-item">
                     <i class="ph ph-magic-wand"></i> Générer
                 </a>
+                <a href="{% url 'playlist_merge' %}" class="nav-item">
+                    <i class="ph ph-git-merge"></i> Fusionner
+                </a>
                 <a href="#" class="nav-item">
                     <i class="ph ph-heart"></i> Titres likés
                 </a>
@@ -45,6 +48,9 @@
                 </a>
                 <a href="{% url 'music_upload' %}" class="nav-item">
                     <i class="ph ph-upload-simple"></i> Uploader
+                </a>
+                <a href="{% url 'music_reset' %}" class="nav-item" style="color: #ff6b6b;">
+                    <i class="ph ph-trash"></i> Réinitialiser
                 </a>
                 {% endif %}
 

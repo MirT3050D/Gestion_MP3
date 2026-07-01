@@ -2,11 +2,18 @@
 {% load static %}
 
 {% block content %}
-<div class="header-action">
-    <h1>Aperçu de la Bibliothèque</h1>
-    <a href="{% url 'music_upload' %}" class="btn-primary">
-        <i class="ph ph-upload-simple"></i> Uploader
-    </a>
+<div class="header-action" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1 style="margin-bottom: 0;">Aperçu de la Bibliothèque</h1>
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+        {% if musics %}
+        <a href="{% url 'music_reset' %}" class="btn-danger" title="Vider toute la bibliothèque et supprimer les fichiers du serveur">
+            <i class="ph ph-trash"></i> Réinitialiser la bibliothèque
+        </a>
+        {% endif %}
+        <a href="{% url 'music_upload' %}" class="btn-primary">
+            <i class="ph ph-upload-simple"></i> Uploader
+        </a>
+    </div>
 </div>
 
 <div class="music-list-container">

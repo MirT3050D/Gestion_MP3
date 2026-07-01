@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1>Confirmer la réinitialisation de la bibliothèque</h1>
+</div>
+
+<div class="card p-4 delete-wrapper">
+    <div class="alert alert-danger mb-4" style="line-height: 1.5;">
+        <i class="ph ph-warning-circle" style="font-size: 1.4rem; vertical-align: middle; margin-right: 0.5rem;"></i>
+        <strong>Attention :</strong> Êtes-vous sûr de vouloir supprimer définitivement <strong>toutes les musiques ({{ count }} fichier{{ count|pluralize }})</strong> de votre répertoire et de la base de données ?<br><br>
+        Cette action est irréversible et supprimera également tous les fichiers MP3 physiques stockés sur le serveur dans le dossier <code>media/mp3/</code>.
+    </div>
+    
+    <form method="post" style="margin-top: 1.5rem;">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">
+            <i class="ph ph-trash"></i> Oui, tout réinitialiser
+        </button>
+        <a href="{% url 'music_list' %}" class="btn-text ml-2" style="margin-left: 1rem; color: var(--text-secondary); text-decoration: none; font-weight: 600;">Annuler</a>
+    </form>
+</div>
+{% endblock %}

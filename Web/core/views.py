@@ -63,6 +63,41 @@ def music_delete(request, pk):
         return redirect('music_list')
     return render(request, 'core/music_confirm_delete.html', {'music': music})
 
+@login_required
+@user_passes_test(staff_required, login_url='playlist_list')
+def music_reset(request):
+    import os
+    from django.conf import settings
+    from django.contrib import messages
+    musics = FichierMP3.objects.all()
+    count = musics.count()
+    if request.method == 'POST':
+        # 1. Supprimer chaque fichier physique associé aux objets en BDD
+        for music in musics:
+            if music.fichier:
+                try:
+                    music.fichier.delete(save=False)
+                except Exception:
+                    pass
+        
+        # 2. Nettoyer aussi le dossier physique media/mp3/ au cas où il resterait des fichiers orphelins
+        media_mp3_dir = os.path.join(settings.MEDIA_ROOT, 'mp3')
+        if os.path.exists(media_mp3_dir):
+            for filename in os.listdir(media_mp3_dir):
+                file_path = os.path.join(media_mp3_dir, filename)
+                try:
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+                except Exception:
+                    pass
+
+        # 3. Supprimer toutes les entrées en base de données
+        musics.delete()
+        
+        messages.success(request, f"La bibliothèque a été réinitialisée avec succès ({count} fichier(s) supprimé(s)).")
+        return redirect('music_list')
+    return render(request, 'core/music_confirm_reset.html', {'count': count})
+
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -187,10 +222,15 @@ def playlist_generate(request):
             selected_musics = generate_playlist_algorithm(queryset, target_seconds, priority_ids=priority_ids)
             total_duration = sum(m.duree_secondes for m in selected_musics if m.duree_secondes)
             
-            if total_duration != target_seconds:
-                logger.warning(f"Impossible de générer une playlist de {target_seconds}s. Le plus proche trouvé est de {total_duration}s.")
-                messages.error(request, f"Aucune combinaison de musiques ne correspond exactement à la durée de {target_seconds} secondes ({m_val} min et {s_val} sec).")
+            if not selected_musics or abs(total_duration - target_seconds) > 59:
+                logger.warning(f"Impossible de générer une playlist de {target_seconds}s (à 59s près). Le plus proche trouvé est de {total_duration}s.")
+                messages.error(request, f"Aucune combinaison de musiques ne correspond à la durée de {target_seconds} secondes ({m_val} min et {s_val} sec) dans une marge de 59 secondes.")
                 return redirect('playlist_generate')
+            elif total_duration != target_seconds:
+                diff = abs(total_duration - target_seconds)
+                m_found = total_duration // 60
+                s_found = total_duration % 60
+                messages.info(request, f"💡 Playlist générée avec une durée totale de {m_found}m {s_found}s (à {diff}s de l'objectif de {m_val}m {s_val}s).")
         else:
             # Si pas de durée spécifiée, on ne prend que les musiques prioritaires (celles qui matchent les inclusions)
             selected_musics = [m for m in queryset if m.id in priority_ids]
@@ -211,7 +251,10 @@ def playlist_generate(request):
 @login_required
 def playlist_preview(request):
     track_ids = request.session.get('temp_playlist', [])
-    musics = FichierMP3.objects.filter(id__in=track_ids)
+    musics_dict = {m.id: m for m in FichierMP3.objects.filter(id__in=track_ids)}
+    musics = [musics_dict[tid] for tid in track_ids if tid in musics_dict]
+    
+    available_musics = FichierMP3.objects.all().order_by('-date_upload')
     
     # Recalculer la durée totale
     total_seconds = sum(m.duree_secondes for m in musics if m.duree_secondes)
@@ -220,10 +263,34 @@ def playlist_preview(request):
     
     return render(request, 'core/playlist_preview.html', {
         'musics': musics,
+        'available_musics': available_musics,
         'total_seconds': total_seconds,
         'total_minutes': total_minutes,
         'total_remainder_seconds': total_remainder_seconds
     })
+
+@login_required
+def playlist_preview_remove(request, index):
+    if request.method == 'POST':
+        track_ids = request.session.get('temp_playlist', [])
+        if 0 <= index < len(track_ids):
+            track_ids.pop(index)
+            request.session['temp_playlist'] = track_ids
+            request.session.modified = True
+            messages.success(request, "Titre retiré de votre sélection.")
+    return redirect('playlist_preview')
+
+@login_required
+def playlist_preview_add(request, music_id):
+    if request.method == 'POST':
+        track_ids = request.session.get('temp_playlist', [])
+        track_ids.append(music_id)
+        request.session['temp_playlist'] = track_ids
+        request.session.modified = True
+        music = get_object_or_404(FichierMP3, pk=music_id)
+        messages.success(request, f"Titre '{music.fichier.name}' ajouté à votre sélection.")
+    return redirect('playlist_preview')
+
 
 @login_required
 def playlist_save(request):
@@ -250,6 +317,48 @@ def playlist_save(request):
 def playlist_list(request):
     playlists = Playlist.objects.filter(utilisateur=request.user).order_by('-date_creation')
     return render(request, 'core/playlist_list.html', {'playlists': playlists})
+
+@login_required
+def playlist_merge(request):
+    user_playlists = Playlist.objects.filter(utilisateur=request.user).order_by('-date_creation')
+    
+    if request.method == 'POST':
+        nom = request.POST.get('nom', 'Playlist Fusionnée').strip()
+        if not nom:
+            nom = 'Playlist Fusionnée'
+            
+        selected_ids = request.POST.getlist('playlists')
+        if len(selected_ids) < 2:
+            messages.error(request, "Veuillez sélectionner au moins deux playlists à fusionner.")
+            return render(request, 'core/playlist_merge.html', {'playlists': user_playlists})
+            
+        # Création de la nouvelle playlist
+        new_playlist = Playlist.objects.create(nom=nom, utilisateur=request.user)
+        
+        # Récupération de toutes les musiques des playlists sélectionnées, en ordre
+        ordre_actuel = 0
+        added_mp3_ids = set()
+        
+        for p_id in selected_ids:
+            try:
+                pl = Playlist.objects.get(id=p_id, utilisateur=request.user)
+                tracks = PlaylistTrack.objects.filter(playlist=pl).order_by('ordre')
+                for track in tracks:
+                    if track.fichier_mp3_id not in added_mp3_ids:
+                        PlaylistTrack.objects.create(
+                            playlist=new_playlist,
+                            fichier_mp3=track.fichier_mp3,
+                            ordre=ordre_actuel
+                        )
+                        added_mp3_ids.add(track.fichier_mp3_id)
+                        ordre_actuel += 1
+            except Playlist.DoesNotExist:
+                continue
+                
+        messages.success(request, f"La playlist '{nom}' a été créée en fusionnant {len(selected_ids)} playlists ({ordre_actuel} titres au total) !")
+        return redirect('playlist_detail', pk=new_playlist.pk)
+        
+    return render(request, 'core/playlist_merge.html', {'playlists': user_playlists})
 
 @login_required
 def playlist_detail(request, pk):

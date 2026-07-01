@@ -2,11 +2,18 @@
 {% load static %}
 
 {% block content %}
-<div class="header-action">
-    <h1><i class="ph-fill ph-playlist" style="color: var(--accent);"></i> Mes Playlists</h1>
-    <a href="{% url 'playlist_generate' %}" class="btn-primary">
-        <i class="ph ph-magic-wand"></i> Créer une Playlist
-    </a>
+<div class="header-action" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1 style="margin-bottom: 0;"><i class="ph-fill ph-playlist" style="color: var(--accent);"></i> Mes Playlists</h1>
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+        {% if playlists|length >= 2 %}
+        <a href="{% url 'playlist_merge' %}" class="btn-secondary" style="border: 1px solid var(--border-color);">
+            <i class="ph ph-git-merge"></i> Fusionner
+        </a>
+        {% endif %}
+        <a href="{% url 'playlist_generate' %}" class="btn-primary">
+            <i class="ph ph-magic-wand"></i> Créer une Playlist
+        </a>
+    </div>
 </div>
 
 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem;">

@@ -45,13 +45,69 @@
             {{ music.duree_secondes }}s
         </div>
         <div class="col-actions">
-            <button class="action-btn" title="Remplacer" onclick="openReplaceModal({{ music.id }})">
+            <button class="action-btn" title="Remplacer par un titre de même durée" onclick="openReplaceModal({{ music.id }})">
                 <i class="ph ph-arrows-left-right"></i>
             </button>
+            <form action="{% url 'playlist_preview_remove' forloop.counter0 %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="action-btn" title="Retirer de la sélection" style="color: #f44336; background: none; border: none; cursor: pointer;">
+                    <i class="ph ph-trash"></i>
+                </button>
+            </form>
         </div>
     </div>
     {% endfor %}
 </div>
+
+<!-- Section pour ajouter d'autres musiques avant de sauvegarder -->
+<div style="margin-top: 2rem; margin-bottom: 2rem;">
+    <h3 style="margin-bottom: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+        <i class="ph ph-plus-circle" style="color: var(--accent);"></i>
+        Ajouter d'autres musiques à la sélection
+    </h3>
+    
+    {% if available_musics %}
+    <div class="music-list-container" style="max-height: 350px; overflow-y: auto;">
+        <div class="music-list-header">
+            <div>#</div>
+            <div>Titre</div>
+            <div>Durée</div>
+            <div>Action</div>
+        </div>
+        
+        {% for m in available_musics %}
+        <div class="music-row">
+            <div class="col-cover">
+                <img src="{% static 'img/default_cover.png' %}" alt="Cover">
+            </div>
+            
+            <div class="col-title">
+                <span class="track-name">{% if m.metadonnees.titre %}{{ m.metadonnees.titre }}{% else %}{{ m.fichier.name|slice:"4:-4"|default:"Sans Titre" }}{% endif %}</span>
+                <span class="track-artist">{% if m.metadonnees.artiste %}{{ m.metadonnees.artiste }}{% else %}Artiste Inconnu{% endif %}</span>
+            </div>
+            
+            <div class="col-duration">
+                {{ m.duree_secondes }}s
+            </div>
+            
+            <div class="col-actions">
+                <form action="{% url 'playlist_preview_add' m.id %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem;">
+                        <i class="ph ph-plus"></i> Ajouter
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 1.5rem; background: var(--bg-surface); border-radius: 8px; text-align: center;">
+        <p style="color: var(--text-secondary);">Toutes vos musiques sont déjà dans cette sélection !</p>
+    </div>
+    {% endif %}
+</div>
+
 
 <div class="form-wrapper">
     <form method="post" action="{% url 'playlist_save' %}">

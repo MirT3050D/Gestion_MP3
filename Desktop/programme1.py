@@ -44,7 +44,7 @@ def scanner_et_envoyer():
         
         # 🔍 2. Filtrer les MP3
         for fichier in tous_les_fichiers:
-            if fichier.endswith('.mp3') and fichier not in fichiers_deja_envoyes:
+            if fichier.lower().endswith('.mp3') and fichier not in fichiers_deja_envoyes:
                 chemin_complet = os.path.join(DOSSIER_MUSIQUE, fichier)
                 
                 # 🧱 3. Création du dictionnaire selon notre format validé
