@@ -1,0 +1,12 @@
+[
+  {
+    "artiste": "Justin Bieber",
+    "genre": "Pop"
+  },
+  {
+    "genre": "genre_a_exclure"
+  },
+  {
+    "artiste": "artiste_a_exclure"
+  }
+]

@@ -2,47 +2,42 @@
 {% load static %}
 
 {% block content %}
-<div class="header-action">
+<div class="header-action" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <a href="{% url 'music_list' %}" class="btn-secondary">
-        <i class="ph ph-arrow-left"></i> Retour à la bibliothèque
+        Retour a la bibliotheque
     </a>
-    <div class="action-bar">
+    <div class="action-bar" style="display: flex; gap: 10px;">
         <a href="{% url 'music_edit' music.pk %}" class="btn-primary">
-            <i class="ph ph-pencil-simple"></i> Modifier
+            Modifier
         </a>
-        <a href="{% url 'music_delete' music.pk %}" class="btn-danger ml-2">
-            <i class="ph ph-trash"></i> Supprimer
+        <a href="{% url 'music_delete' music.pk %}" class="btn-danger">
+            Supprimer
         </a>
     </div>
 </div>
 
-<div class="detail-hero">
-    <img src="{% static 'img/default_cover.png' %}" alt="Cover" class="detail-cover">
-    <div class="detail-info">
-        <span class="detail-tag">Titre Audio</span>
-        
-        {% if music.metadonnees.titre %}
-            <h1 class="detail-title">{{ music.metadonnees.titre }}</h1>
-            <p class="detail-artist">{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste }}{% else %}Artiste Inconnu{% endif %}</p>
-        {% else %}
-            <h1 class="detail-title">{{ music.fichier.name|slice:"4:-4"|default:"Sans Titre" }}</h1>
-            <p class="detail-artist">Artiste Inconnu</p>
-        {% endif %}
-        
-        <p class="detail-meta">
-            Ajouté le {{ music.date_upload|date:"d M Y H:i" }} • 
-            {% if music.duree_secondes %}{{ music.duree_secondes }} secondes{% else %}Durée inconnue{% endif %}
-        </p>
-        
-        <button class="btn-primary mt-4" style="border-radius: 99px; padding: 1rem 3rem; font-size: 1.1rem;" onclick="playTrack('{{ music.fichier.url }}', '{% if music.metadonnees.titre %}{{ music.metadonnees.titre|escapejs }}{% else %}{{ music.fichier.name|slice:'4:-4'|escapejs }}{% endif %}', '{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste|escapejs }}{% else %}Artiste Inconnu{% endif %}')">
-            <i class="ph-fill ph-play-circle" style="font-size: 1.5rem;"></i> LECTURE
-        </button>
-    </div>
+<div class="detail-hero" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    {% if music.metadonnees.titre %}
+        <h1 class="detail-title">{{ music.metadonnees.titre }}</h1>
+        <p class="detail-artist">{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste }}{% elif music.metadonnees.artiste_album %}{{ music.metadonnees.artiste_album }}{% else %}Artiste Inconnu{% endif %}</p>
+    {% else %}
+        <h1 class="detail-title">{{ music.fichier.name }}</h1>
+        <p class="detail-artist">Artiste Inconnu</p>
+    {% endif %}
+    
+    <p class="detail-meta" style="color: var(--text-sec);">
+        Ajoute le {{ music.date_upload|date:"d M Y H:i" }} • 
+        {% if music.duree_secondes %}{{ music.duree_secondes }} secondes{% else %}Duree inconnue{% endif %}
+    </p>
+    
+    <button class="btn-primary" style="margin-top: 15px; width: fit-content;" onclick="playTrack('{{ music.fichier.url }}', '{% if music.metadonnees.titre %}{{ music.metadonnees.titre|escapejs }}{% else %}{{ music.fichier.name|escapejs }}{% endif %}', '{% if music.metadonnees.artiste %}{{ music.metadonnees.artiste|escapejs }}{% elif music.metadonnees.artiste_album %}{{ music.metadonnees.artiste_album|escapejs }}{% else %}Artiste Inconnu{% endif %}')">
+        LECTURE
+    </button>
 </div>
 
-<div class="card p-4 mt-4">
-    <h2>Données brutes (Métadonnées)</h2>
-    <div class="json-viewer mt-2">
+<div class="card">
+    <h2>Donnees brutes (Metadonnees)</h2>
+    <div class="json-viewer" style="margin-top: 10px;">
         <pre><code>{{ meta_json }}</code></pre>
     </div>
 </div>

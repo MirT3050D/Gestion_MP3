@@ -1,65 +1,37 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MP3 Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=4">
 </head>
-
 <body>
-    <!-- Script pour le lecteur audio global -->
     <audio id="global-player" style="display: none;"></audio>
 
     <div class="app-layout">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
-            <div class="brand">
-                <i class="ph-fill ph-music-note"></i> MP3 Studio
-            </div>
+            <div class="brand">MP3 Studio</div>
 
             <ul class="nav-menu">
-                <p
-                    style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem; margin-top: 1rem;">
-                    Frontoffice</p>
-                <a href="{% url 'playlist_list' %}" class="nav-item">
-                    <i class="ph ph-playlist"></i> Mes Playlists
-                </a>
-                <a href="{% url 'playlist_generate' %}" class="nav-item">
-                    <i class="ph ph-magic-wand"></i> Générer
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="ph ph-heart"></i> Titres likés
-                </a>
+                <p style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-sec); margin-bottom: 0.5rem; margin-top: 1rem;">Frontoffice</p>
+                <a href="{% url 'playlist_list' %}" class="nav-item">Mes Playlists</a>
+                <a href="{% url 'playlist_generate' %}" class="nav-item">Generer Playlist</a>
 
                 {% if user.is_staff %}
-                <p
-                    style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem; margin-top: 2rem;">
-                    Backoffice</p>
-                <a href="{% url 'music_list' %}" class="nav-item">
-                    <i class="ph ph-database"></i> Bibliothèque MP3
-                </a>
-                <a href="{% url 'music_upload' %}" class="nav-item">
-                    <i class="ph ph-upload-simple"></i> Uploader
-                </a>
+                <p style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-sec); margin-bottom: 0.5rem; margin-top: 2rem;">Backoffice</p>
+                <a href="{% url 'music_list' %}" class="nav-item">Bibliotheque MP3</a>
+                <a href="{% url 'music_upload' %}" class="nav-item">Uploader</a>
                 {% endif %}
 
-                <p
-                    style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem; margin-top: 2rem;">
-                    Général</p>
-                <a href="#" class="nav-item">
-                    <i class="ph ph-gear"></i> Paramètres
-                </a>
+                <p style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-sec); margin-bottom: 0.5rem; margin-top: 2rem;">General</p>
                 {% if user.is_authenticated %}
                 <form action="{% url 'logout' %}" method="post" style="margin-top: 0.5rem;">
                     {% csrf_token %}
-                    <button type="submit" class="nav-item"
-                        style="width: 100%; background: none; border: none; text-align: left;">
-                        <i class="ph ph-sign-out"></i> Déconnexion
+                    <button type="submit" class="nav-item" style="width: 100%; background: none; border: none; text-align: left; cursor: pointer;">
+                        Deconnexion
                     </button>
                 </form>
                 {% endif %}
@@ -68,28 +40,11 @@
 
         <!-- Main Content Area -->
         <div class="main-wrapper">
-            <!-- Topbar -->
-            <header class="topbar">
-                <div class="search-bar">
-                    <i class="ph ph-magnifying-glass"></i>
-                    <input type="text" placeholder="Rechercher des morceaux, artistes...">
-                </div>
-
-                <div class="user-nav">
-                    {% if user.is_authenticated %}
-                    <div class="user-profile">
-                        <i class="ph-fill ph-user-circle"></i>
-                        {{ user.username }}
-                    </div>
-                    {% endif %}
-                </div>
-            </header>
-
             <!-- Messages -->
             {% if messages %}
-            <div style="padding: 1rem 2rem 0;">
+            <div style="padding: 10px 0;">
                 {% for message in messages %}
-                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+                <div style="padding: 10px; background: #fee2e2; border: 1px solid #f87171; border-radius: 6px; color: var(--danger); font-size: 0.9rem; margin-bottom: 10px;">
                     {{ message }}
                 </div>
                 {% endfor %}
@@ -101,52 +56,33 @@
                 {% block content %}{% endblock %}
             </main>
         </div>
-
-        <!-- Global Player Bar -->
-        <footer class="player-bar">
-            <!-- Info (Cover, Title, Artist) -->
-            <div class="player-info">
-                <img id="player-cover" src="{% static 'img/default_cover.png' %}" alt="Cover">
-                <div class="player-meta">
-                    <span class="player-title" id="player-title">Aucune lecture</span>
-                    <span class="player-artist" id="player-artist">-</span>
-                </div>
-            </div>
-
-            <!-- Controls (Play, Prev, Next, Bar) -->
-            <div class="player-controls">
-                <div class="control-buttons">
-                    <button class="ctrl-btn"><i class="ph-fill ph-shuffle"></i></button>
-                    <button class="ctrl-btn"><i class="ph-fill ph-skip-back"></i></button>
-                    <button class="ctrl-btn play-pause" id="btn-play-pause" onclick="togglePlay()">
-                        <i class="ph-fill ph-play" id="icon-play-pause"></i>
-                    </button>
-                    <button class="ctrl-btn"><i class="ph-fill ph-skip-forward"></i></button>
-                    <button class="ctrl-btn"><i class="ph-fill ph-repeat"></i></button>
-                </div>
-                <div class="progress-container">
-                    <span class="time" id="time-current">0:00</span>
-                    <div class="progress-bar" id="progress-bar">
-                        <div class="progress-fill" id="progress-fill"></div>
-                    </div>
-                    <span class="time" id="time-total">0:00</span>
-                </div>
-            </div>
-
-            <!-- Volume -->
-            <div class="player-volume">
-                <i class="ph ph-speaker-high"></i>
-                <div class="volume-bar">
-                    <div class="volume-fill"></div>
-                </div>
-            </div>
-        </footer>
     </div>
+
+    <!-- Player Bar -->
+    <footer class="player-bar">
+        <div class="player-info">
+            <span class="player-title" id="player-title">Aucune lecture</span>
+            <span class="player-artist" id="player-artist">-</span>
+        </div>
+
+        <div class="player-controls">
+            <button class="action-btn" id="btn-play-pause" onclick="togglePlay()" style="font-weight: bold;">
+                Play
+            </button>
+            <div class="progress-container">
+                <span class="time" id="time-current">0:00</span>
+                <div class="progress-bar" id="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <span class="time" id="time-total">0:00</span>
+            </div>
+        </div>
+    </footer>
 
     <!-- Script de lecture basique -->
     <script>
         const audio = document.getElementById('global-player');
-        const playBtnIcon = document.getElementById('icon-play-pause');
+        const playBtn = document.getElementById('btn-play-pause');
         const progressFill = document.getElementById('progress-fill');
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
@@ -156,24 +92,20 @@
             document.getElementById('player-title').textContent = title;
             document.getElementById('player-artist').textContent = artist;
             audio.play();
-            playBtnIcon.classList.remove('ph-play');
-            playBtnIcon.classList.add('ph-pause');
+            playBtn.textContent = 'Pause';
         }
 
         function togglePlay() {
             if (audio.src && audio.src !== window.location.href) {
                 if (audio.paused) {
                     audio.play();
-                    playBtnIcon.classList.remove('ph-play');
-                    playBtnIcon.classList.add('ph-pause');
+                    playBtn.textContent = 'Pause';
                 } else {
                     audio.pause();
-                    playBtnIcon.classList.remove('ph-pause');
-                    playBtnIcon.classList.add('ph-play');
+                    playBtn.textContent = 'Play';
                 }
             } else {
-                // Si aucune musique n'est chargée, on lance la première de la liste
-                const firstPlayBtn = document.querySelector('.action-btn[title="Lire"]');
+                const firstPlayBtn = document.querySelector('.action-btn[onclick^="playTrack"]');
                 if (firstPlayBtn) {
                     firstPlayBtn.click();
                 }
@@ -196,12 +128,10 @@
         });
 
         audio.addEventListener('ended', () => {
-            playBtnIcon.classList.remove('ph-pause');
-            playBtnIcon.classList.add('ph-play');
+            playBtn.textContent = 'Play';
             progressFill.style.width = '0%';
         });
         
-        // Navigation dans la barre de progression
         const progressBar = document.getElementById('progress-bar');
         progressBar.addEventListener('click', (e) => {
             if (audio.duration) {
@@ -213,5 +143,4 @@
         });
     </script>
 </body>
-
 </html>
