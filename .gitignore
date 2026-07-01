@@ -1,2 +1,38 @@
 musique/
 Web/media
+Desktop/log.txt
+
+# Django & Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+Web/.venv/
+Web/venv/
+Web/env/
+Web/ENV/
+
+# Databases
+db.sqlite3
+db.sqlite3-journal
+Web/db.sqlite3
+Web/db.sqlite3-journal
+
+# Logs
+*.log
+
+# Environment variables / Secret files
+.env
+*.env
+local_settings.py
+Web/.env
+Web/*.env
+Web/local_settings.py
+
