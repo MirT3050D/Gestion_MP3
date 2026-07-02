@@ -31,7 +31,7 @@ class App:
 
     def run(self):
         py = sys.executable
-        self.proc = [subprocess.Popen([py, f"programme{i}.py"], cwd=DOSSIER_DESKTOP) for i in (1, 2, 3)]
+        self.proc = [subprocess.Popen([py, f"programme{i}.py"], cwd=DOSSIER_DESKTOP) for i in (1, 2, 3, 4)]
         self.btn_run.config(state=tk.DISABLED, bg="#424242")
         self.btn_stop.config(state=tk.NORMAL, bg="#c62828")
         self.btn_scan.config(state=tk.NORMAL, bg="#ef6c00")

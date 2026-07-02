@@ -12,6 +12,8 @@ urlpatterns = [
     path('playlist/save/', views.playlist_save, name='playlist_save'),
     path('playlist/cancel/', views.playlist_cancel, name='playlist_cancel'),
     path('playlists/', views.playlist_list, name='playlist_list'),
+    path('playlists/merge/', views.playlist_merge, name='playlist_merge'),
+    path('playlists/delete-all/', views.playlist_delete_all, name='playlist_delete_all'),
     path('playlists/<int:pk>/', views.playlist_detail, name='playlist_detail'),
     path('playlists/<int:pk>/export/', views.playlist_export_zip, name='playlist_export_zip'),
     

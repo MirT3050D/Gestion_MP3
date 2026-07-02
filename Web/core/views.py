@@ -285,3 +285,53 @@ def playlist_export_zip(request, pk):
     response = HttpResponse(zip_buffer.read(), content_type='application/zip')
     response['Content-Disposition'] = f'attachment; filename="Playlist_{playlist.nom}.zip"'
     return response
+
+@login_required
+def playlist_merge(request):
+    if request.method == 'POST':
+        nom_fusion = request.POST.get('nom_fusion', '').strip()
+        playlist_ids = request.POST.getlist('playlist_ids')
+        
+        if not nom_fusion:
+            messages.error(request, "Veuillez spécifier un nom pour la playlist fusionnée.")
+            return redirect('playlist_list')
+            
+        if not playlist_ids:
+            messages.error(request, "Veuillez sélectionner au moins une playlist à fusionner.")
+            return redirect('playlist_list')
+            
+        playlists = Playlist.objects.filter(id__in=playlist_ids, utilisateur=request.user)
+        if not playlists.exists():
+            messages.error(request, "Aucune playlist valide sélectionnée.")
+            return redirect('playlist_list')
+            
+        nouvelle_playlist = Playlist.objects.create(nom=nom_fusion, utilisateur=request.user)
+        
+        added_track_ids = set()
+        ordre_courant = 0
+        for pl in playlists:
+            playlist_tracks = PlaylistTrack.objects.filter(playlist=pl).select_related('fichier_mp3').order_by('ordre')
+            for pt in playlist_tracks:
+                if pt.fichier_mp3_id not in added_track_ids:
+                    PlaylistTrack.objects.create(
+                        playlist=nouvelle_playlist,
+                        fichier_mp3=pt.fichier_mp3,
+                        ordre=ordre_courant
+                    )
+                    ordre_courant += 1
+                    added_track_ids.add(pt.fichier_mp3_id)
+                
+        messages.success(request, f"La playlist '{nom_fusion}' a été créée avec succès en fusionnant {playlists.count()} playlists.")
+        return redirect('playlist_list')
+        
+    return redirect('playlist_list')
+
+@login_required
+def playlist_delete_all(request):
+    if request.method == 'POST':
+        playlists = Playlist.objects.filter(utilisateur=request.user)
+        count = playlists.count()
+        playlists.delete()
+        messages.success(request, f"Toutes vos playlists ({count}) ont été supprimées.")
+    return redirect('playlist_list')
+

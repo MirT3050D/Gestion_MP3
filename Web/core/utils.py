@@ -20,17 +20,22 @@ def generate_playlist_algorithm(queryset, target_seconds: int) -> List[FichierMP
                 if new_w not in dp:
                     dp[new_w] = dp[w] + [music.id]
                     
-    # Trouver la duree la plus proche en elargissant petit a petit
+    # Trouver la duree la plus proche en priorisant la valeur exacte ou au-dessus (+59s max), 
+    # puis en retombant en dessous en dernier recours.
     best_w = None
-    for d in range(target_seconds + 1):
-        w_down = target_seconds - d
-        w_up = target_seconds + d
-        if w_down in dp:
-            best_w = w_down
+    
+    # 1. Recherche entre target_seconds et target_seconds + 60 (exclut target_seconds + 60)
+    for w in range(target_seconds, target_seconds + 60):
+        if w in dp:
+            best_w = w
             break
-        if w_up <= target_seconds + 59 and w_up in dp:
-            best_w = w_up
-            break
+            
+    # 2. Si aucune combinaison ne convient, recherche en dessous de target_seconds
+    if best_w is None:
+        for w in range(target_seconds - 1, -1, -1):
+            if w in dp:
+                best_w = w
+                break
             
     best_combination_ids = dp[best_w] if best_w is not None else []
     

@@ -2,35 +2,257 @@
 {% load static %}
 
 {% block content %}
+<style>
+    /* Sleek card hover effect */
+    .playlist-card {
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+    }
+    .playlist-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent);
+        box-shadow: 0 4px 20px rgba(30, 58, 138, 0.25);
+    }
+    
+    /* Modern Checkbox Label container */
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 8px 12px;
+        background: #111827;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+    .checkbox-container:hover {
+        border-color: var(--accent);
+        background: #1f2937;
+    }
+    .checkbox-container input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: var(--accent);
+    }
+    .checkbox-container span {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-sec);
+        transition: color 0.2s ease;
+    }
+    /* Highlight if checkbox is checked */
+    .checkbox-container.checked {
+        border-color: var(--accent);
+        background: rgba(30, 58, 138, 0.15);
+    }
+    .checkbox-container.checked span {
+        color: var(--text);
+    }
+    
+    /* Merge bar styling */
+    .merge-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+        padding: 15px 20px;
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+    }
+    
+    .merge-input {
+        flex-grow: 1;
+        min-width: 200px;
+        max-width: 320px;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #111827;
+        color: var(--text);
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease;
+    }
+    .merge-input:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    /* Premium Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(5px);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .modal-overlay.active {
+        opacity: 1;
+    }
+    .modal-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 420px;
+        width: 90%;
+        text-align: center;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+    }
+    .modal-overlay.active .modal-content {
+        transform: scale(1);
+    }
+    .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 25px;
+    }
+</style>
+
 <div class="header-action" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h1>Mes Playlists</h1>
-    <a href="{% url 'playlist_generate' %}" class="btn-primary">
-        Creer une Playlist
-    </a>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="{% url 'playlist_generate' %}" class="btn-primary">
+            Creer une Playlist
+        </a>
+        {% if playlists %}
+        <form id="delete-all-form" action="{% url 'playlist_delete_all' %}" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="button" onclick="showConfirmModal()" class="btn-danger" style="background: var(--danger); color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; transition: background 0.2s ease;">
+                Effacer toutes mes playlists
+            </button>
+        </form>
+        {% endif %}
+    </div>
 </div>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
-    {% for playlist in playlists %}
-    <div class="card" style="display: flex; flex-direction: column;">
-        <h3 style="font-weight: bold; margin-bottom: 10px;">
-            {{ playlist.nom }}
-        </h3>
-        <p style="color: var(--text-sec); font-size: 0.85rem; margin-bottom: 15px;">
-            Creee le {{ playlist.date_creation|date:"d M Y" }}
-            <br>
-            {{ playlist.musiques.count }} titres
+{% if playlists %}
+<form action="{% url 'playlist_merge' %}" method="post" id="merge-form">
+    {% csrf_token %}
+    
+    <!-- Merge Control Bar -->
+    <div class="merge-bar">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-sec);">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                <path d="M12 8v8"></path>
+                <path d="M8 12h8"></path>
+            </svg>
+            <span style="font-weight: 600; font-size: 0.95rem;">Fusionner des playlists :</span>
+        </div>
+        <input type="text" name="nom_fusion" placeholder="Nom de la nouvelle playlist" required class="merge-input">
+        <button type="submit" class="btn-primary" style="padding: 8px 20px;">Fusionner les playlists</button>
+    </div>
+
+    <!-- Playlists Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
+        {% for playlist in playlists %}
+        <div class="card playlist-card">
+            <!-- Checkbox selection -->
+            <label class="checkbox-container">
+                <input type="checkbox" name="playlist_ids" value="{{ playlist.pk }}" onchange="toggleCheckboxHighlight(this)">
+                <span>Sélectionner pour fusion</span>
+            </label>
+            
+            <h3 style="font-weight: bold; margin-bottom: 10px;">
+                {{ playlist.nom }}
+            </h3>
+            <p style="color: var(--text-sec); font-size: 0.85rem; margin-bottom: 15px;">
+                Creee le {{ playlist.date_creation|date:"d M Y" }}
+                <br>
+                {{ playlist.musiques.count }} titres
+            </p>
+            
+            <a href="{% url 'playlist_detail' playlist.pk %}" class="btn-secondary" style="width: 100%; margin-top: auto;">
+                Ouvrir la playlist
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</form>
+
+<script>
+    function toggleCheckboxHighlight(checkbox) {
+        const container = checkbox.closest('.checkbox-container');
+        if (checkbox.checked) {
+            container.classList.add('checked');
+        } else {
+            container.classList.remove('checked');
+        }
+    }
+    
+    // Add client-side validation to ensure at least 2 playlists are checked before submit
+    document.getElementById('merge-form').addEventListener('submit', function(e) {
+        const checkedCount = document.querySelectorAll('input[name="playlist_ids"]:checked').length;
+        if (checkedCount < 2) {
+            e.preventDefault();
+            alert('Veuillez sélectionner au moins 2 playlists à fusionner.');
+        }
+    });
+
+    // Custom confirm modal controls
+    function showConfirmModal() {
+        const modal = document.getElementById('confirm-modal');
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 10);
+    }
+    
+    function closeConfirmModal() {
+        const modal = document.getElementById('confirm-modal');
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+    
+    function submitDeleteAllForm() {
+        document.getElementById('delete-all-form').submit();
+    }
+</script>
+
+<!-- Confirm Delete Modal -->
+<div id="confirm-modal" class="modal-overlay" onclick="if(event.target === this) closeConfirmModal();">
+    <div class="modal-content">
+        <h2 style="margin-bottom: 12px; color: var(--text); font-size: 1.35rem;">Supprimer les playlists ?</h2>
+        <p style="color: var(--text-sec); font-size: 0.95rem; line-height: 1.5; margin-bottom: 10px;">
+            Êtes-vous sûr de vouloir supprimer <strong>TOUTES</strong> vos playlists ?
         </p>
-        
-        <a href="{% url 'playlist_detail' playlist.pk %}" class="btn-secondary" style="width: 100%; margin-top: auto;">
-            Ouvrir la playlist
-        </a>
+        <p style="color: var(--danger); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 20px;">
+            Cette action est définitive et irréversible.
+        </p>
+        <div class="modal-buttons">
+            <button type="button" onclick="closeConfirmModal()" class="btn-secondary" style="padding: 10px 20px;">Annuler</button>
+            <button type="button" onclick="submitDeleteAllForm()" class="btn-danger" style="background: var(--danger); color: white; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600;">Confirmer la suppression</button>
+        </div>
     </div>
-    {% empty %}
-    <div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--border);">
-        <h2>Vous n'avez pas encore de playlist</h2>
-        <p style="color: var(--text-sec); margin-bottom: 15px;">Generez votre premiere playlist.</p>
-        <a href="{% url 'playlist_generate' %}" class="btn-primary">Essayer l'algorithme</a>
-    </div>
-    {% endfor %}
 </div>
+
+{% else %}
+<div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--border);">
+    <h2>Vous n'avez pas encore de playlist</h2>
+    <p style="color: var(--text-sec); margin-bottom: 15px;">Generez votre premiere playlist.</p>
+    <a href="{% url 'playlist_generate' %}" class="btn-primary">Essayer l'algorithme</a>
+</div>
+{% endif %}
 {% endblock %}

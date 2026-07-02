@@ -5,7 +5,7 @@ import requests
 import logging
 import datetime
 
-from config import LOG_FILE, URL_API_DJANGO, BLACKLIST_FILE, AETEBLACKLIST_TXT
+from config import LOG_FILE, URL_API_DJANGO, BLACKLIST_FILE, AETEBLACKLIST_TXT, DUREE_JSON
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,8 +16,9 @@ logging.basicConfig(
     ]
 )
 
-# Queue a ecouter
+# Queues RabbitMQ
 QUEUE_ENTREE = 'metadata_extraites'
+QUEUE_SORTIE_SUPPRESSION = 'fichiers_a_supprimer'
 
 def envoyer_a_django(chemin_absolu, metadonnees):
     try:
@@ -123,6 +124,24 @@ def enregistrer_blackliste_txt(chemin, metadonnees):
     except Exception as e:
         logging.error(f" Erreur lors de l'écriture dans aeteblacklist.txt : {e}")
 
+def obtenir_duree_limite():
+    if not os.path.exists(DUREE_JSON):
+        return None
+    try:
+        with open(DUREE_JSON, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, (int, float)):
+            return data
+        if isinstance(data, dict) and "duree" in data:
+            return data["duree"]
+        if isinstance(data, dict):
+            for val in data.values():
+                if isinstance(val, (int, float)):
+                    return val
+    except Exception as e:
+        logging.error(f" Erreur lors de la lecture de duree.json : {e}")
+    return None
+
 def callback(ch, method, properties, body):
     message_recu = json.loads(body.decode())
     chemin = message_recu["chemin_absolu"]
@@ -133,15 +152,11 @@ def callback(ch, method, properties, body):
         ch.basic_ack(delivery_tag=method.delivery_tag)
         return
 
-    # Verif blacklist
+    # Verif blacklist (Ne pas supprimer les fichiers blacklistes)
     meta_piste = message_recu.get("metadonnees_completes", {})
     if est_blackliste(meta_piste):
-        logging.info(f"  Fichier blacklist. Enregistrement et suppression du fichier local...")
+        logging.info(f"  Fichier blacklist. Enregistrement mais conservation du fichier local (pas de suppression).")
         enregistrer_blackliste_txt(chemin, meta_piste)
-        try:
-            os.remove(chemin)
-        except Exception as e:
-            logging.warning(f"  Impossible de supprimer le fichier de la blacklist : {e}")
         ch.basic_ack(delivery_tag=method.delivery_tag)
         return
  
@@ -151,17 +166,31 @@ def callback(ch, method, properties, body):
     succes = envoyer_a_django(chemin, message_recu)
     
     if succes:
-        logging.info(f"  Envoi reussi. Suppression du fichier local...")
-        try:
-            # 2. Suppression fichier si succes
-            os.remove(chemin)
-            logging.info(f"  Fichier supprime : {chemin}")
-            # 3. Accuse de reception
-            ch.basic_ack(delivery_tag=method.delivery_tag)
-        except Exception as e:
-            logging.warning(f"  Fichier envoye mais impossible de le supprimer : {e}")
-            # Acquittement
-            ch.basic_ack(delivery_tag=method.delivery_tag)
+        logging.info(f"  Envoi reussi.")
+        # 2. Verification duree limite
+        duree = message_recu.get("duree_secondes")
+        duree_limite = obtenir_duree_limite()
+        
+        doit_supprimer = True
+        if duree_limite is not None and duree is not None:
+            if duree > duree_limite:
+                doit_supprimer = False
+                logging.info(f"  Fichier conserve (duree {duree}s > limite {duree_limite}s) : {chemin}")
+        
+        if doit_supprimer:
+            logging.info(f"  Envoi de la demande de suppression a la file '{QUEUE_SORTIE_SUPPRESSION}'...")
+            try:
+                ch.basic_publish(
+                    exchange='',
+                    routing_key=QUEUE_SORTIE_SUPPRESSION,
+                    body=json.dumps({"chemin_absolu": chemin})
+                )
+                logging.info(f"  Demande de suppression envoyee pour : {chemin}")
+            except Exception as e:
+                logging.error(f"  Impossible d'envoyer la demande de suppression : {e}")
+        
+        # 3. Accuse de reception
+        ch.basic_ack(delivery_tag=method.delivery_tag)
     else:
         logging.warning(f"  Echec. Le message reste dans la file pour un nouvel essai.")
         # Requeue si echec
@@ -172,6 +201,7 @@ def main():
     channel = connection.channel()
     
     channel.queue_declare(queue=QUEUE_ENTREE)
+    channel.queue_declare(queue=QUEUE_SORTIE_SUPPRESSION)
     
     # QoS
     channel.basic_qos(prefetch_count=1)

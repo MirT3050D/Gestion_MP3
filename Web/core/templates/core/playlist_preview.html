@@ -24,6 +24,29 @@
     </div>
 </div>
 
+<!-- Modal d'ajout -->
+<div id="add-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center;">
+    <div class="card" style="width: 550px; max-width: 90vw; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);">
+        <h3 style="margin-bottom: 15px; color: var(--text);">Ajouter un titre</h3>
+        <input type="text" id="track-search-input" placeholder="Rechercher par titre, artiste, nom de fichier..." oninput="loadAvailableTracks()" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: #111827; color: var(--text); margin-bottom: 15px;">
+        <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 5px; background: #0a0a0a;">
+            <ul id="available-tracks-list" style="list-style: none; padding: 0; margin: 0;">
+                <!-- Rempli par AJAX -->
+            </ul>
+        </div>
+        <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button class="btn-secondary" onclick="closeAddModal()">Annuler</button>
+        </div>
+    </div>
+</div>
+
+<div style="margin-bottom: 15px; display: flex; justify-content: flex-end;">
+    <button type="button" class="btn-primary" onclick="openAddModal()" style="display: flex; align-items: center; gap: 8px; padding: 8px 16px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 1px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Ajouter un titre
+    </button>
+</div>
+
 <div class="music-list-container" style="margin-bottom: 20px;">
     {% for music in musics %}
     <div class="music-row">
@@ -34,9 +57,12 @@
         <div class="col-duration" style="margin-left: auto; margin-right: 20px;">
             {{ music.duree_secondes }}s
         </div>
-        <div class="col-actions">
+        <div class="col-actions" style="display: flex; gap: 8px;">
             <button class="action-btn" onclick="openReplaceModal({{ music.id }})">
                 Remplacer
+            </button>
+            <button class="action-btn btn-danger" onclick="removeTrack({{ music.id }})" style="background: var(--danger); color: white;">
+                Supprimer
             </button>
         </div>
     </div>
@@ -123,6 +149,82 @@ function confirmReplace(newTrackId) {
             window.location.reload();
         } else {
             alert("Erreur lors du remplacement");
+        }
+    });
+}
+
+function removeTrack(trackId) {
+    if (!confirm("Retirer ce titre de la playlist temporaire ?")) return;
+    
+    fetch(`/api/remove-track/${trackId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            window.location.reload();
+        } else {
+            alert("Erreur lors de la suppression du titre");
+        }
+    });
+}
+
+function openAddModal() {
+    document.getElementById('add-modal').style.display = 'flex';
+    document.getElementById('track-search-input').value = '';
+    loadAvailableTracks();
+}
+
+function closeAddModal() {
+    document.getElementById('add-modal').style.display = 'none';
+}
+
+function loadAvailableTracks() {
+    const query = document.getElementById('track-search-input').value;
+    document.getElementById('available-tracks-list').innerHTML = '<p style="padding: 10px; color: var(--text-sec);">Recherche...</p>';
+    
+    fetch(`/api/available-tracks/?q=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => {
+            let html = '';
+            if(data.tracks && data.tracks.length > 0) {
+                data.tracks.forEach(track => {
+                    html += `
+                        <li style="padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: var(--text);">${track.titre}</strong><br>
+                                <span style="font-size: 0.8rem; color: var(--text-sec);">${track.artiste} (${track.duree_secondes}s)</span>
+                            </div>
+                            <button class="btn-primary" onclick="addTrack(${track.id})" style="padding: 6px 12px; font-size: 0.85rem;">Ajouter</button>
+                        </li>
+                    `;
+                });
+            } else {
+                html = '<p style="padding: 10px; color: var(--text-sec);">Aucun titre disponible.</p>';
+            }
+            document.getElementById('available-tracks-list').innerHTML = html;
+        });
+}
+
+function addTrack(trackId) {
+    fetch('/api/add-track/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({track_id: trackId})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            window.location.reload();
+        } else {
+            alert("Erreur lors de l'ajout du titre");
         }
     });
 }
